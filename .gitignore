@@ -1,0 +1,29 @@
+#Virtual Environment
+venv/
+
+#Python
+__pycache__/
+*.pyc
+
+#Env
+.env
+
+#SQLite
+db.sqlite3
+
+#VSCode
+.vscode/
+
+#PyCharm
+.idea/
+
+#Static files
+staticfiles/
+
+#Migrations cache
+*.pyo
+*.pyd
+
+#OS
+.DS_Store
+Thumbs.db
