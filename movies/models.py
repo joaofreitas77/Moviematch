@@ -12,6 +12,7 @@ class Movie(BaseModel):
     type = models.CharField(max_length=10, choices=TYPE_CHOICES)
     genre = models.CharField(max_length=100)
     realese_year = models.IntegerField()
+    poster = models.URLField(blank=True, null=True)
 
     def __str__(self):
         return self.tittle

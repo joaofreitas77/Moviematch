@@ -11,4 +11,4 @@ class Favorite(BaseModel):
         unique_together = ('user', 'movie')
 
     def __str__(self):
-        return f'{self.user.username} favoritou {self.movie.title}'
+        return f'{self.user.username} favoritou {self.movie.tittle}'
