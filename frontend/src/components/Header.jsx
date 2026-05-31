@@ -12,10 +12,13 @@ function Header() {
   return (
     <header className="header">
       <Link to="/" className="logo">
-        MovieMatch
+        CineLog
       </Link>
 
-      <nav>
+      <nav className="nav">
+        <Link to="/">Home</Link>
+        <Link to="/favorites">Favoritos</Link>
+
         <button onClick={handleLogout} className="logout-button">
           Sair
         </button>

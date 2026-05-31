@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getMovies } from "../services/api";
+import { getMovies, addFavorite } from "../services/api";
 import MovieCard from "../components/MovieCard";
 import "../styles/global.css";
 
@@ -10,11 +10,21 @@ function Home() {
     getMovies().then(setMovies);
   }, []);
 
+  async function handleFavorite(movieId) {
+    try {
+      await addFavorite(movieId);
+      alert("Filme adicionado aos favoritos!");
+    } catch (error) {
+      alert("Erro ao favoritar filme");
+      console.error(error);
+    }
+  }
+
   return (
     <main className="page">
       <section className="banner">
-        <h1>MovieMatch</h1>
-        <p>Seu catálogo de filmes importados pela OMDb.</p>
+        <h1>CineLog</h1>
+        <p>Seu catálogo de filmes</p>
       </section>
 
       <section className="catalog">
@@ -22,7 +32,11 @@ function Home() {
 
         <div className="movie-row">
           {movies.map((movie) => (
-            <MovieCard key={movie.id} movie={movie} />
+            <MovieCard
+              key={movie.id}
+              movie={movie}
+              onFavorite={handleFavorite}
+            />
           ))}
         </div>
       </section>

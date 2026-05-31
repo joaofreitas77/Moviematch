@@ -57,10 +57,16 @@ body {
 
 .header nav {
   display: flex;
+  align-items: center;
   gap: 20px;
 }
 
 .header nav a {
+  display: flex;
+  align-items: center;
+
+  height: 38px;
+
   text-decoration: none;
   color: white;
   transition: 0.2s;
@@ -115,7 +121,7 @@ body {
   display: flex;
   gap: 16px;
   overflow-x: auto;
-  padding-bottom: 20px;
+  padding: 10px 10px 20px 10px;
 }
 
 .movie-card {
@@ -134,7 +140,7 @@ body {
 }
 
 .movie-card:hover {
-  transform: scale(1.08);
+  transform: scale(1.04);
 }
 
 .movie-card img {
@@ -321,10 +327,14 @@ body {
 }
 
 .logout-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
   background: #e50914;
   color: white;
   border: none;
-  padding: 10px 16px;
+  padding: 0 16px;
   border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
@@ -332,6 +342,39 @@ body {
 
 .logout-button:hover {
   background: #ff1d28;
+}
+
+.favorite-card-wrapper {
+  min-width: 200px;
+  max-width: 200px;
+  transition: transform 0.25s ease;
+}
+
+.favorite-card-wrapper:hover {
+  transform: scale(1.04);
+}
+
+.favorite-button,
+.remove-favorite-button {
+  width: 100%;
+  margin-top: 10px;
+  border: none;
+  border-radius: 6px;
+  background: #e50914;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 10px;
+  transition: 0.2s;
+}
+
+.favorite-button:hover,
+.remove-favorite-button:hover {
+  background: #ff1d28;
+}
+
+.favorite-card-wrapper .movie-card:hover {
+  transform: none;
 }
 
 @media (max-width: 900px) {

@@ -7,6 +7,7 @@ import Home from "./pages/Home";
 import MovieDetails from "./pages/MovieDetails";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Favorites from "./pages/Favorites";
 
 function ProtectedLayout({ children }) {
   return (
@@ -37,6 +38,15 @@ function App() {
         element={
           <ProtectedLayout>
             <MovieDetails />
+          </ProtectedLayout>
+        }
+      />
+
+      <Route
+        path="/favorites"
+        element={
+          <ProtectedLayout>
+            <Favorites />
           </ProtectedLayout>
         }
       />

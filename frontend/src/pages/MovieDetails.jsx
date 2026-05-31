@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useLocation } from "react-router-dom";
 import { getMovieById } from "../services/api";
 
 function MovieDetails() {
   const { id } = useParams();
+  const location = useLocation();
+
+  const backPath = location.state?.from || "/";
 
   const [movie, setMovie] = useState(null);
   const [erro, setErro] = useState("");
@@ -18,7 +21,9 @@ function MovieDetails() {
     return (
       <main className="details-page">
         <p>{erro}</p>
-        <Link to="/" className="back-button">Voltar ao catálogo</Link>
+        <Link to={backPath} className="back-button">
+          Voltar
+        </Link>
       </main>
     );
   }
@@ -48,7 +53,9 @@ function MovieDetails() {
 
   return (
     <main className="details-page">
-      <Link to="/" className="back-button">Voltar ao catálogo</Link>
+      <Link to={backPath} className="back-button">
+        Voltar
+      </Link>
 
       <section className="details-container">
         <img
@@ -67,13 +74,13 @@ function MovieDetails() {
           </div>
 
           <div className="details-list">
-            {detalhes.map(([label, value]) => (
+            {detalhes.map(([label, value]) =>
               value && (
                 <p key={label}>
                   <strong>{label}:</strong> {value}
                 </p>
               )
-            ))}
+            )}
           </div>
 
           <p className="details-description">

@@ -59,3 +59,62 @@ export async function getMovieById(id) {
 
   return await response.json();
 }
+
+export async function getFavorites() {
+  const token = getToken();
+
+  const response = await fetch(`${API_URL}/favorites/`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Erro ao buscar favoritos");
+  }
+
+  const data = await response.json();
+
+  return data.results || data;
+}
+
+export async function addFavorite(movieId) {
+  const token = getToken();
+
+  const response = await fetch(`${API_URL}/favorites/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      movie: movieId,
+    }),
+  });
+
+  const data = await response.json();
+
+  console.log("STATUS FAVORITE:", response.status);
+  console.log("RESPOSTA FAVORITE:", data);
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(data));
+  }
+
+  return data;
+}
+
+export async function removeFavorite(favoriteId) {
+  const token = getToken();
+
+  const response = await fetch(`${API_URL}/favorites/${favoriteId}/`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Erro ao remover favorito");
+  }
+}
