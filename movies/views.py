@@ -7,11 +7,15 @@ from .serializers import MovieSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .omdb_services import search_movie
+from rest_framework import viewsets
+from rest_framework.permissions import AllowAny
+from .models import Movie
+from .serializers import MovieSerializer
 
-
-class MovieViewSet(SoftDeleteModelViewSet):
+class MovieViewSet(viewsets.ModelViewSet):
+    queryset = Movie.objects.all()
     serializer_class = MovieSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         queryset = Movie.objects.filter(is_deleted=False)
@@ -62,6 +66,7 @@ class ImportMovieView(APIView):
                 },
                 status=404
             )
+        print("Poster:", data.get("Poster"))
 
         movie, created = Movie.objects.get_or_create(
             tittle=data.get("Title"),
@@ -71,6 +76,18 @@ class ImportMovieView(APIView):
                 "genre": data.get("Genre"),
                 "realese_year": int(data.get("Year", "0")[:4]),
                 "poster": data.get("Poster") if data.get("Poster") != "N/A" else None,
+                "runtime": data.get("Runtime") if data.get("Runtime") != "N/A" else None,
+                "director": data.get("Director") if data.get("Director") != "N/A" else None,
+                "writer": data.get("Writer") if data.get("Writer") != "N/A" else None,
+                "actors": data.get("Actors") if data.get("Actors") != "N/A" else None,
+                "language": data.get("Language") if data.get("Language") != "N/A" else None,
+                "country": data.get("Country") if data.get("Country") != "N/A" else None,
+                "awards": data.get("Awards") if data.get("Awards") != "N/A" else None,
+                "imdb_rating": data.get("imdbRating") if data.get("imdbRating") != "N/A" else None,
+                "imdb_votes": data.get("imdbVotes") if data.get("imdbVotes") != "N/A" else None,
+                "metascore": data.get("Metascore") if data.get("Metascore") != "N/A" else None,
+                "rated": data.get("Rated") if data.get("Rated") != "N/A" else None,
+                "released": data.get("Released") if data.get("Released") != "N/A" else None,
             }
         )
 

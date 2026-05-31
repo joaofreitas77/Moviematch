@@ -15,4 +15,5 @@ urlpatterns = [
     path('api/v1/reviews/', include('reviews.urls')),
     path('api/v1/favorites/', include('favorites.urls')),
     path('api/v1/recomendations/', include('recomendations.urls')),
+    path("api/v1/accounts/", include("accounts.urls")),
 ]
