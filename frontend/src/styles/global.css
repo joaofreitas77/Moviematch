@@ -81,7 +81,7 @@ body {
 }
 
 .banner {
-  height: 320px;
+  height: 350px;
 
   display: flex;
   flex-direction: column;
@@ -89,11 +89,18 @@ body {
 
   padding: 0 50px;
 
-  background: linear-gradient(
-    to right,
-    rgba(0, 0, 0, 1),
-    rgba(20, 20, 20, 0.85)
-  );
+  background:
+    linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.75),
+      rgba(0, 0, 0, 0.45),
+      rgba(0, 0, 0, 0.75)
+    ),
+    url("../assets/banner1.png");
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .banner h1 {
@@ -179,12 +186,19 @@ body {
 }
 
 .back-button {
-  display: inline-block;
-  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  width: fit-content;
   background: #e50914;
   color: white;
-  padding: 10px 18px;
+  border: none;
   border-radius: 6px;
+  padding: 0 16px;
+  cursor: pointer;
+  font-weight: bold;
+  text-decoration: none;
   margin-bottom: 30px;
   transition: 0.2s;
 }
@@ -375,6 +389,97 @@ body {
 
 .favorite-card-wrapper .movie-card:hover {
   transform: none;
+}
+
+.review-form-section {
+  margin-top: 40px;
+  background: #222;
+  padding: 24px;
+  border-radius: 10px;
+}
+
+.review-form-section h2 {
+  margin-bottom: 16px;
+}
+
+.review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.stars {
+  display: flex;
+  gap: 6px;
+}
+
+.star {
+  background: transparent;
+  border: none;
+  color: #666;
+  font-size: 32px;
+  cursor: pointer;
+}
+
+.star.active {
+  color: #e50914;
+}
+
+.review-form textarea {
+  min-height: 120px;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  background: #141414;
+  color: white;
+  resize: vertical;
+}
+
+.review-submit-button {
+  align-self: flex-start;
+  background: #e50914;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.review-submit-button:hover {
+  background: #ff1d28;
+}
+
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.review-card {
+  display: flex;
+  gap: 18px;
+  background: #222;
+  padding: 16px;
+  border-radius: 10px;
+}
+
+.review-card img {
+  width: 90px;
+  height: 130px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.review-user {
+  color: #ccc;
+  margin-bottom: 8px;
+}
+
+.review-stars {
+  color: #e50914;
+  font-size: 22px;
+  margin-bottom: 8px;
 }
 
 @media (max-width: 900px) {

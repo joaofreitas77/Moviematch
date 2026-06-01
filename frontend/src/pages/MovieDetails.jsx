@@ -1,15 +1,27 @@
 import { useEffect, useState } from "react";
-import { Link, useParams, useLocation } from "react-router-dom";
-import { getMovieById } from "../services/api";
+import { Link, useParams, useLocation, useNavigate } from "react-router-dom";
+import { getMovieById, addReview } from "../services/api";
 
 function MovieDetails() {
   const { id } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const backPath = location.state?.from || "/";
 
+  function handleBack() {
+    if (location.state?.from) {
+      navigate(-1);
+    } else {
+      navigate("/");
+    }
+  }
+
   const [movie, setMovie] = useState(null);
   const [erro, setErro] = useState("");
+
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
 
   useEffect(() => {
     getMovieById(id)
@@ -17,13 +29,32 @@ function MovieDetails() {
       .catch(() => setErro("Erro ao carregar detalhes do filme"));
   }, [id]);
 
+  async function handleSubmitReview(e) {
+    e.preventDefault();
+
+    if (rating === 0) {
+      alert("Selecione uma nota de 1 a 5 estrelas.");
+      return;
+    }
+
+    try {
+      await addReview(movie.id, rating, comment);
+      alert("Avaliação enviada com sucesso!");
+      setRating(0);
+      setComment("");
+    } catch (error) {
+      alert("Erro ao enviar avaliação");
+      console.error(error);
+    }
+  }
+
   if (erro) {
     return (
       <main className="details-page">
         <p>{erro}</p>
-        <Link to={backPath} className="back-button">
+        <button onClick={handleBack} className="back-button">
           Voltar
-        </Link>
+        </button>
       </main>
     );
   }
@@ -53,9 +84,9 @@ function MovieDetails() {
 
   return (
     <main className="details-page">
-      <Link to={backPath} className="back-button">
+      <button onClick={handleBack} className="back-button">
         Voltar
-      </Link>
+      </button>
 
       <section className="details-container">
         <img
@@ -88,6 +119,35 @@ function MovieDetails() {
             {movie.description || "Sem descrição disponível."}
           </p>
         </div>
+      </section>
+
+      <section className="review-form-section">
+        <h2>Avaliar filme</h2>
+
+        <form onSubmit={handleSubmitReview} className="review-form">
+          <div className="stars">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                type="button"
+                key={star}
+                onClick={() => setRating(star)}
+                className={star <= rating ? "star active" : "star"}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+
+          <textarea
+            placeholder="Escreva sua avaliação..."
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+          />
+
+          <button type="submit" className="review-submit-button">
+            Enviar avaliação
+          </button>
+        </form>
       </section>
     </main>
   );

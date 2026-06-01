@@ -1,5 +1,3 @@
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 from rest_framework.permissions import IsAuthenticated
 
 from core.viewsets import SoftDeleteModelViewSet
@@ -12,8 +10,9 @@ class ReviewViewSet(SoftDeleteModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Review.objects.filter(is_deleted=False)
+        return Review.objects.filter(
+            is_deleted=False
+        ).order_by("-created_at")
 
-    @method_decorator(cache_page(60))
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)

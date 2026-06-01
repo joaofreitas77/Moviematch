@@ -16,8 +16,9 @@ function Header() {
       </Link>
 
       <nav className="nav">
-        <Link to="/">Home</Link>
-        <Link to="/favorites">Favoritos</Link>
+        <Link to="/" replace>Inicio</Link>
+        <Link to="/favorites" replace>Favoritos</Link>
+        <Link to="/reviews" replace>Avaliações Recentes</Link>
 
         <button onClick={handleLogout} className="logout-button">
           Sair

@@ -118,3 +118,73 @@ export async function removeFavorite(favoriteId) {
     throw new Error("Erro ao remover favorito");
   }
 }
+
+export async function getReviews() {
+  let token = getToken();
+
+  let response = await fetch(`${API_URL}/reviews/`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (response.status === 401) {
+    token = await refreshAccessToken();
+
+    response = await fetch(`${API_URL}/reviews/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  }
+
+  if (!response.ok) {
+    throw new Error("Erro ao buscar avaliações");
+  }
+
+  const data = await response.json();
+
+  return data.results || data;
+}
+
+export async function addReview(movieId, rating, comment) {
+  let token = getToken();
+
+  let response = await fetch(`${API_URL}/reviews/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      movie: movieId,
+      rating,
+      comment,
+    }),
+  });
+
+  if (response.status === 401) {
+    token = await refreshAccessToken();
+
+    response = await fetch(`${API_URL}/reviews/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        movie: movieId,
+        rating,
+        comment,
+      }),
+    });
+  }
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(data));
+  }
+
+  return data;
+}
