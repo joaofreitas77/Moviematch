@@ -125,8 +125,9 @@ body {
 }
 
 .movie-row {
-  display: flex;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
   overflow-x: auto;
   padding: 10px 10px 20px 10px;
 }
@@ -134,15 +135,11 @@ body {
 .movie-card {
   min-width: 200px;
   max-width: 200px;
-
   text-decoration: none;
   color: white;
-
   background-color: #222;
-
   border-radius: 10px;
   overflow: hidden;
-
   transition: transform 0.25s ease;
 }
 
@@ -480,6 +477,32 @@ body {
   color: #e50914;
   font-size: 22px;
   margin-bottom: 8px;
+}
+
+.catalog-header {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.catalog-header h2 {
+  margin: 0;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  font-size: 16px;
+}
+
+.search-input:focus {
+  outline: none;
+  border: 1px solid #333;
+  box-shadow: none;
 }
 
 @media (max-width: 900px) {

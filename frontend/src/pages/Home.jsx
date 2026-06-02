@@ -5,6 +5,7 @@ import "../styles/global.css";
 
 function Home() {
   const [movies, setMovies] = useState([]);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     getMovies().then(setMovies);
@@ -20,6 +21,10 @@ function Home() {
     }
   }
 
+  const filteredMovies = movies.filter((movie) =>
+    movie.tittle.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <main className="page">
       <section className="banner">
@@ -28,16 +33,30 @@ function Home() {
       </section>
 
       <section className="catalog">
-        <h2>Filmes disponíveis</h2>
+        <div className="catalog-header">
+          <h2>Filmes disponíveis</h2>
+
+          <input
+            className="search-input"
+            type="text"
+            placeholder="Pesquisar filme..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
 
         <div className="movie-row">
-          {movies.map((movie) => (
-            <MovieCard
-              key={movie.id}
-              movie={movie}
-              onFavorite={handleFavorite}
-            />
-          ))}
+          {filteredMovies.length > 0 ? (
+            filteredMovies.map((movie) => (
+              <MovieCard
+                key={movie.id}
+                movie={movie}
+                onFavorite={handleFavorite}
+              />
+            ))
+          ) : (
+            <p>Nenhum filme encontrado.</p>
+          )}
         </div>
       </section>
     </main>
