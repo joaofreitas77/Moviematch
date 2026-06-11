@@ -20,7 +20,7 @@ class MovieViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = Movie.objects.filter(is_deleted=False)
 
-        title = self.request.query_params.get('tittle')
+        title = self.request.query_params.get('title')
         genre = self.request.query_params.get('genre')
         movie_type = self.request.query_params.get('type')
         release_year = self.request.query_params.get('release_year')
@@ -35,7 +35,7 @@ class MovieViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(type=movie_type)
 
         if release_year:
-            queryset = queryset.filter(release_year=release_year)
+            queryset = queryset.filter(realese_year=release_year)
 
         return queryset
 
