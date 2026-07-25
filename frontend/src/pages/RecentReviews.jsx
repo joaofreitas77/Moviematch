@@ -6,29 +6,16 @@ function RecentReviews() {
   const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
-    loadReviews();
+    getReviews()
+      .then((data) => Promise.all(
+        data.map(async (review) => ({
+          ...review,
+          movieData: await getMovieById(review.movie),
+        }))
+      ))
+      .then(setReviews)
+      .catch(console.error);
   }, []);
-
-  async function loadReviews() {
-    try {
-      const data = await getReviews();
-
-      const reviewsWithMovies = await Promise.all(
-        data.map(async (review) => {
-          const movie = await getMovieById(review.movie);
-
-          return {
-            ...review,
-            movieData: movie,
-          };
-        })
-      );
-
-      setReviews(reviewsWithMovies);
-    } catch (error) {
-      console.error(error);
-    }
-  }
 
   return (
     <main className="page">

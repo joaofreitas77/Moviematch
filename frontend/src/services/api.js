@@ -46,12 +46,52 @@ export function logout() {
   localStorage.removeItem("refresh");
 }
 
-export async function getMovies() {
-  const response = await fetch(`${API_URL}/movies/`);
+async function refreshAccessToken() {
+  const refresh = localStorage.getItem("refresh");
+
+  if (!refresh) {
+    logout();
+    throw new Error("Sessão expirada");
+  }
+
+  const response = await fetch(`${API_URL}/token/refresh/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refresh }),
+  });
+
+  if (!response.ok) {
+    logout();
+    throw new Error("Sessão expirada");
+  }
 
   const data = await response.json();
+  localStorage.setItem("access", data.access);
+  return data.access;
+}
 
-  return data.results || data;
+export async function getMovies() {
+  const movies = [];
+  let nextPage = `${API_URL}/movies/`;
+
+  while (nextPage) {
+    const response = await fetch(nextPage);
+
+    if (!response.ok) {
+      throw new Error("Erro ao buscar filmes");
+    }
+
+    const data = await response.json();
+
+    if (Array.isArray(data)) {
+      return data;
+    }
+
+    movies.push(...(data.results || []));
+    nextPage = data.next;
+  }
+
+  return movies;
 }
 
 export async function getMovieById(id) {

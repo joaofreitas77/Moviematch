@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { logout } from "../services/api";
 
 function Header() {
@@ -11,19 +11,20 @@ function Header() {
 
   return (
     <header className="header">
-      <Link to="/" className="logo">
-        CineLog
-      </Link>
+      <NavLink to="/home" className="logo" aria-label="CineLog — início">
+        CINE<span>LOG</span>
+      </NavLink>
 
-      <nav className="nav">
-        <Link to="/" replace>Inicio</Link>
-        <Link to="/favorites" replace>Favoritos</Link>
-        <Link to="/reviews" replace>Avaliações Recentes</Link>
-
-        <button onClick={handleLogout} className="logout-button">
-          Sair
-        </button>
+      <nav className="nav" aria-label="Navegação principal">
+        <NavLink to="/home">Início</NavLink>
+        <NavLink to="/favorites">Minha lista</NavLink>
+        <NavLink to="/reviews">Avaliações</NavLink>
       </nav>
+
+      <button onClick={handleLogout} className="logout-button" aria-label="Sair da conta">
+        <span className="logout-label">Sair</span>
+        <span aria-hidden="true">↗</span>
+      </button>
     </header>
   );
 }

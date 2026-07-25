@@ -7,33 +7,20 @@ function Favorites() {
   const [movies, setMovies] = useState([]);
 
   useEffect(() => {
-    loadFavorites();
+    getFavorites()
+      .then((favorites) => Promise.all(
+        favorites.map(async (favorite) => ({
+          ...await getMovieById(favorite.movie),
+          favoriteId: favorite.id,
+        }))
+      ))
+      .then(setMovies)
+      .catch(console.error);
   }, []);
-
-  async function loadFavorites() {
-    try {
-      const favorites = await getFavorites();
-
-      const moviesData = await Promise.all(
-        favorites.map(async (favorite) => {
-          const movie = await getMovieById(favorite.movie);
-
-          return {
-            ...movie,
-            favoriteId: favorite.id,
-          };
-        })
-      );
-
-      setMovies(moviesData);
-    } catch (error) {
-      console.error(error);
-    }
-  }
 
   async function handleRemoveFavorite(favoriteId) {
     await removeFavorite(favoriteId);
-    loadFavorites();
+    setMovies((current) => current.filter((movie) => movie.favoriteId !== favoriteId));
   }
 
   return (

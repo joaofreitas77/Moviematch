@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link, useParams, useLocation, useNavigate } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { getMovieById, addReview } from "../services/api";
 
 function MovieDetails() {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-
-  const backPath = location.state?.from || "/";
 
   function handleBack() {
     if (location.state?.from) {
@@ -22,6 +20,12 @@ function MovieDetails() {
 
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [message, setMessage] = useState("");
+
+  function showMessage(text) {
+    setMessage(text);
+    window.setTimeout(() => setMessage(""), 3000);
+  }
 
   useEffect(() => {
     getMovieById(id)
@@ -33,17 +37,17 @@ function MovieDetails() {
     e.preventDefault();
 
     if (rating === 0) {
-      alert("Selecione uma nota de 1 a 5 estrelas.");
+      showMessage("Selecione uma nota de 1 a 5 estrelas.");
       return;
     }
 
     try {
       await addReview(movie.id, rating, comment);
-      alert("Avaliação enviada com sucesso!");
+      showMessage("Avaliação enviada com sucesso!");
       setRating(0);
       setComment("");
     } catch (error) {
-      alert("Erro ao enviar avaliação");
+      showMessage("Não foi possível enviar a avaliação.");
       console.error(error);
     }
   }
@@ -84,6 +88,8 @@ function MovieDetails() {
 
   return (
     <main className="details-page">
+      {message && <div className="toast" role="status">{message}</div>}
+
       <button onClick={handleBack} className="back-button">
         Voltar
       </button>
