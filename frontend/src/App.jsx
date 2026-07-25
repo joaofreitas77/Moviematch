@@ -1,7 +1,10 @@
+import { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import Header from "./components/Header";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
+import PublicOnlyRoute from "./components/PublicOnlyRoute";
 
 import Home from "./pages/Home";
 import MovieDetails from "./pages/MovieDetails";
@@ -9,8 +12,10 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Favorites from "./pages/Favorites";
 import RecentReviews from "./pages/RecentReviews";
+import MyMovies from "./pages/MyMovies";
+import AdminDashboard from "./pages/AdminDashboard";
 
-import { getToken } from "./services/api";
+import { getSessionVersion, getToken } from "./services/api";
 
 function RootRedirect() {
   const token = getToken();
@@ -30,12 +35,30 @@ function ProtectedLayout({ children }) {
 }
 
 function App() {
+  const [sessionVersion, setSessionVersion] = useState(getSessionVersion);
+
+  useEffect(() => {
+    function synchronizeSession() {
+      setSessionVersion(getSessionVersion());
+    }
+
+    window.addEventListener("pageshow", synchronizeSession);
+    window.addEventListener("popstate", synchronizeSession);
+    window.addEventListener("cinelog:session-change", synchronizeSession);
+
+    return () => {
+      window.removeEventListener("pageshow", synchronizeSession);
+      window.removeEventListener("popstate", synchronizeSession);
+      window.removeEventListener("cinelog:session-change", synchronizeSession);
+    };
+  }, []);
+
   return (
-    <Routes>
+    <Routes key={sessionVersion}>
       <Route path="/" element={<RootRedirect />} />
 
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
+      <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
 
       <Route
         path="/home"
@@ -65,12 +88,22 @@ function App() {
       />
 
       <Route
+        path="/my-movies"
+        element={<ProtectedLayout><MyMovies /></ProtectedLayout>}
+      />
+
+      <Route
         path="/reviews"
         element={
           <ProtectedLayout>
             <RecentReviews />
           </ProtectedLayout>
         }
+      />
+
+      <Route
+        path="/admin"
+        element={<ProtectedLayout><AdminRoute><AdminDashboard /></AdminRoute></ProtectedLayout>}
       />
     </Routes>
   );

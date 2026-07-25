@@ -15,3 +15,23 @@ class RegisterSerializer(serializers.ModelSerializer):
             password=validated_data["password"]
         )
         return user
+
+
+class CurrentUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "username", "email", "is_staff", "is_active"]
+
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    movies_count = serializers.IntegerField(read_only=True)
+    reviews_count = serializers.IntegerField(read_only=True)
+    favorites_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "id", "username", "email", "is_active", "is_staff",
+            "date_joined", "last_login", "movies_count", "reviews_count",
+            "favorites_count",
+        ]

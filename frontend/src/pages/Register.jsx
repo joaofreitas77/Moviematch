@@ -16,7 +16,7 @@ function Register() {
 
     try {
       await register(username, email, password);
-      navigate("/login");
+      navigate("/login", { replace: true });
     } catch {
       setErro("Erro ao cadastrar. Tente outro usuário.");
     }

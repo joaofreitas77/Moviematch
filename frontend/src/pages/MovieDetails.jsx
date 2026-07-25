@@ -2,6 +2,25 @@ import { useEffect, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { getMovieById, addReview } from "../services/api";
 
+function getYouTubeEmbedUrl(url) {
+  if (!url) return null;
+
+  try {
+    const parsedUrl = new URL(url);
+    let videoId = null;
+
+    if (parsedUrl.hostname.includes("youtu.be")) {
+      videoId = parsedUrl.pathname.slice(1);
+    } else if (parsedUrl.hostname.includes("youtube.com")) {
+      videoId = parsedUrl.searchParams.get("v") || parsedUrl.pathname.split("/embed/")[1];
+    }
+
+    return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}` : null;
+  } catch {
+    return null;
+  }
+}
+
 function MovieDetails() {
   const { id } = useParams();
   const location = useLocation();
@@ -85,6 +104,7 @@ function MovieDetails() {
     ["Classificação", movie.rated],
     ["Lançamento", movie.released],
   ];
+  const trailerEmbedUrl = getYouTubeEmbedUrl(movie.trailer_url);
 
   return (
     <main className="details-page">
@@ -126,6 +146,27 @@ function MovieDetails() {
           </p>
         </div>
       </section>
+
+      {trailerEmbedUrl && (
+        <section className="trailer-section">
+          <div className="trailer-heading">
+            <div>
+              <span className="section-eyebrow">ASSISTA AGORA</span>
+              <h2>Trailer oficial</h2>
+            </div>
+            <a href={movie.trailer_url} target="_blank" rel="noreferrer">Abrir no YouTube ↗</a>
+          </div>
+          <div className="trailer-player">
+            <iframe
+              src={trailerEmbedUrl}
+              title={`Trailer oficial de ${movie.tittle}`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            />
+          </div>
+        </section>
+      )}
 
       <section className="review-form-section">
         <h2>Avaliar filme</h2>

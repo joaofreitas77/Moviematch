@@ -1,24 +1,47 @@
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
-from rest_framework.permissions import IsAuthenticated
-from core.viewsets import SoftDeleteModelViewSet
+from django.db.models import Q
+from rest_framework.permissions import AllowAny, BasePermission, IsAuthenticated, SAFE_METHODS
 from .models import Movie
 from .serializers import MovieSerializer
+from .trailer_services import search_trailer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .omdb_services import search_movie
 from rest_framework import viewsets
-from rest_framework.permissions import AllowAny
 from .models import Movie
 from .serializers import MovieSerializer
+
+class IsMovieOwnerOrAdmin(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in SAFE_METHODS:
+            return True
+        return request.user.is_staff or obj.owner_id == request.user.id
+
 
 class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
-    permission_classes = [AllowAny]
+
+    def get_permissions(self):
+        if self.action in {"list", "retrieve"}:
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated, IsMovieOwnerOrAdmin]
+        return [permission() for permission in permission_classes]
 
     def get_queryset(self):
         queryset = Movie.objects.filter(is_deleted=False)
+
+        if self.request.user.is_staff:
+            pass
+        elif self.request.user.is_authenticated:
+            queryset = queryset.filter(Q(owner__isnull=True) | Q(owner=self.request.user))
+        else:
+            queryset = queryset.filter(owner__isnull=True)
+
+        if self.request.query_params.get("mine") == "true":
+            if not self.request.user.is_authenticated:
+                return queryset.none()
+            queryset = queryset.filter(owner=self.request.user)
 
         title = self.request.query_params.get('title')
         genre = self.request.query_params.get('genre')
@@ -39,10 +62,21 @@ class MovieViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    @method_decorator(cache_page(60))
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
-    
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+    def retrieve(self, request, *args, **kwargs):
+        movie = self.get_object()
+
+        if not movie.trailer_url:
+            trailer_url = search_trailer(movie.tittle, movie.realese_year)
+            if trailer_url:
+                movie.trailer_url = trailer_url
+                movie.save(update_fields=["trailer_url", "updated_at"])
+
+        serializer = self.get_serializer(movie)
+        return Response(serializer.data)
+
 class ImportMovieView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -70,6 +104,7 @@ class ImportMovieView(APIView):
 
         movie, created = Movie.objects.get_or_create(
             tittle=data.get("Title"),
+            owner=request.user,
             defaults={
                 "description": data.get("Plot"),
                 "type": "movie",
@@ -88,10 +123,15 @@ class ImportMovieView(APIView):
                 "metascore": data.get("Metascore") if data.get("Metascore") != "N/A" else None,
                 "rated": data.get("Rated") if data.get("Rated") != "N/A" else None,
                 "released": data.get("Released") if data.get("Released") != "N/A" else None,
+                "trailer_url": search_trailer(
+                    data.get("Title"),
+                    int(data.get("Year", "0")[:4]),
+                ),
             }
         )
 
         return Response({
             "created": created,
-            "movie": movie.tittle
+            "movie": movie.tittle,
+            "id": movie.id,
         })

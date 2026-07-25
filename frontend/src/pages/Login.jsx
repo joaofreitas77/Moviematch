@@ -14,7 +14,7 @@ function Login() {
 
     try {
       await login(username, password);
-      navigate("/", { replace: true });
+      navigate("/home", { replace: true });
     } catch {
       setErro("Usuário ou senha inválidos");
     }
