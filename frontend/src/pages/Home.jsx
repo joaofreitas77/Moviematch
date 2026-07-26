@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { addFavorite, getMovies } from "../services/api";
+import { addFavorite, getMovies, getRecommendations } from "../services/api";
 import MovieCard from "../components/MovieCard";
 
 const normalizeRating = (movie) => Number.parseFloat(movie.imdb_rating) || 0;
@@ -36,12 +36,14 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [showAllMovies, setShowAllMovies] = useState(false);
+  const [recommendations, setRecommendations] = useState({ results: [], favorite_genres: [], has_preferences: false });
 
   useEffect(() => {
     getMovies()
       .then(setMovies)
       .catch(() => setMessage("Não foi possível carregar o catálogo."))
       .finally(() => setLoading(false));
+    getRecommendations().then(setRecommendations).catch(() => null);
   }, []);
 
   const sortedMovies = useMemo(
@@ -125,6 +127,14 @@ function Home() {
           <MovieRow title="Resultados" eyebrow={`${filteredMovies.length} encontrados`} movies={filteredMovies} onFavorite={handleFavorite} />
         ) : (
           <>
+            <MovieRow
+              title="Escolhidos para você"
+              eyebrow={recommendations.has_preferences && recommendations.favorite_genres.length
+                ? `Baseado em ${recommendations.favorite_genres.join(" · ")}`
+                : "Descubra seu próximo favorito"}
+              movies={recommendations.results.slice(0, 10)}
+              onFavorite={handleFavorite}
+            />
             <MovieRow title="Mais bem avaliados" eyebrow="O melhor do CineLog" movies={sortedMovies.slice(0, 10)} onFavorite={handleFavorite} ranked />
             <MovieRow
               title="Todos os filmes"

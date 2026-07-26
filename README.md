@@ -177,13 +177,6 @@ npm run build
 
 O arquivo `.env` contém credenciais e já está ignorado pelo Git. Nunca publique esse arquivo nem chaves reais de API. Em produção, desative o modo de depuração, configure os hosts permitidos e restrinja as origens CORS.
 
-## Próximos passos
-
-- Criar recomendações personalizadas com base em gêneros, favoritos e avaliações;
-- Adicionar testes automatizados para os principais fluxos do front-end;
-- Permitir editar ou remover avaliações pela interface;
-- Preparar configurações específicas para deploy em produção.
-
 ---
 
 Projeto desenvolvido para praticar a construção de uma aplicação full stack com React e Django REST Framework.

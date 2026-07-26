@@ -36,6 +36,7 @@ function ProtectedLayout({ children }) {
 
 function App() {
   const [sessionVersion, setSessionVersion] = useState(getSessionVersion);
+  const [showLoginTransition, setShowLoginTransition] = useState(false);
 
   useEffect(() => {
     function synchronizeSession() {
@@ -53,8 +54,31 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    let transitionTimer;
+
+    function playLoginTransition() {
+      setShowLoginTransition(true);
+      window.clearTimeout(transitionTimer);
+      const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 450 : 1800;
+      transitionTimer = window.setTimeout(() => setShowLoginTransition(false), duration);
+    }
+
+    window.addEventListener("cinelog:login-success", playLoginTransition);
+    return () => {
+      window.removeEventListener("cinelog:login-success", playLoginTransition);
+      window.clearTimeout(transitionTimer);
+    };
+  }, []);
+
   return (
-    <Routes key={sessionVersion}>
+    <>
+      {showLoginTransition && (
+        <div className="login-transition" role="status" aria-label="Login realizado. Carregando CineLog.">
+          <img src="/animation.svg" alt="CineLog" />
+        </div>
+      )}
+      <Routes key={sessionVersion}>
       <Route path="/" element={<RootRedirect />} />
 
       <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
@@ -105,7 +129,8 @@ function App() {
         path="/admin"
         element={<ProtectedLayout><AdminRoute><AdminDashboard /></AdminRoute></ProtectedLayout>}
       />
-    </Routes>
+      </Routes>
+    </>
   );
 }
 

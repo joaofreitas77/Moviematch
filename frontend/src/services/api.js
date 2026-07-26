@@ -28,6 +28,7 @@ export async function login(username, password) {
   localStorage.setItem("access", data.access);
   localStorage.setItem("refresh", data.refresh);
   markSessionChange();
+  window.dispatchEvent(new Event("cinelog:login-success"));
 
   return data;
 }
@@ -318,4 +319,26 @@ export async function addReview(movieId, rating, comment) {
   }
 
   return data;
+}
+
+export async function updateReview(reviewId, rating, comment) {
+  const response = await authenticatedFetch(`${API_URL}/reviews/${reviewId}/`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rating, comment }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.detail || "Não foi possível editar a avaliação");
+  return data;
+}
+
+export async function removeReview(reviewId) {
+  const response = await authenticatedFetch(`${API_URL}/reviews/${reviewId}/`, { method: "DELETE" });
+  if (!response.ok) throw new Error("Não foi possível remover a avaliação");
+}
+
+export async function getRecommendations() {
+  const response = await authenticatedFetch(`${API_URL}/recomendations/`);
+  if (!response.ok) throw new Error("Não foi possível carregar recomendações");
+  return response.json();
 }

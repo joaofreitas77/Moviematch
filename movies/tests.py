@@ -1,4 +1,6 @@
 from django.contrib.auth.models import User
+from unittest.mock import patch
+
 from rest_framework.test import APITestCase
 
 from .models import Movie
@@ -37,3 +39,59 @@ class MoviePrivacyTests(APITestCase):
         self.client.force_authenticate(self.user)
         response = self.client.delete(f"/api/v1/movies/{self.public_movie.id}/")
         self.assertEqual(response.status_code, 403)
+
+    def test_user_cannot_create_personal_copy_of_public_movie(self):
+        self.client.force_authenticate(self.user)
+        response = self.client.post(
+            "/api/v1/movies/",
+            {
+                "tittle": "public",
+                "description": "Description",
+                "type": "movie",
+                "genre": "Drama",
+                "realese_year": 2024,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Movie.objects.filter(owner=self.user, tittle__iexact="Public").count(), 0)
+
+    def test_other_users_private_movie_does_not_block_personal_copy(self):
+        movie_data("Only personal", self.other)
+        self.client.force_authenticate(self.user)
+        response = self.client.post(
+            "/api/v1/movies/",
+            {
+                "tittle": "Only personal",
+                "description": "Description",
+                "type": "movie",
+                "genre": "Drama",
+                "realese_year": 2024,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(Movie.objects.filter(owner=self.user, tittle="Only personal").exists())
+
+    @patch("movies.views.search_trailer", return_value=None)
+    @patch("movies.views.search_movie")
+    def test_import_rejects_movie_from_public_catalog(self, search_movie_mock, _search_trailer_mock):
+        search_movie_mock.return_value = {
+            "Response": "True",
+            "Title": "Public",
+            "Year": "2024",
+            "Plot": "Description",
+            "Genre": "Drama",
+        }
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post(
+            "/api/v1/movies/import/",
+            {"title": "Public"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 409)
+        self.assertIn("catálogo padrão", response.data["error"])

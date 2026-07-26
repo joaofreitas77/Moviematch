@@ -100,16 +100,30 @@ class ImportMovieView(APIView):
                 },
                 status=404
             )
-        print("Poster:", data.get("Poster"))
+        movie_title = data.get("Title")
+        release_year = int(data.get("Year", "0")[:4])
 
-        movie, created = Movie.objects.get_or_create(
-            tittle=data.get("Title"),
-            owner=request.user,
-            defaults={
+        if Movie.objects.filter(
+            owner__isnull=True,
+            is_deleted=False,
+            tittle__iexact=movie_title,
+            realese_year=release_year,
+        ).exists():
+            return Response(
+                {
+                    "error": (
+                        "Este filme já está disponível no catálogo padrão. "
+                        "Adicione-o à Minha lista em vez de Meus filmes."
+                    )
+                },
+                status=409,
+            )
+
+        defaults = {
                 "description": data.get("Plot"),
                 "type": "movie",
                 "genre": data.get("Genre"),
-                "realese_year": int(data.get("Year", "0")[:4]),
+                "realese_year": release_year,
                 "poster": data.get("Poster") if data.get("Poster") != "N/A" else None,
                 "runtime": data.get("Runtime") if data.get("Runtime") != "N/A" else None,
                 "director": data.get("Director") if data.get("Director") != "N/A" else None,
@@ -124,14 +138,36 @@ class ImportMovieView(APIView):
                 "rated": data.get("Rated") if data.get("Rated") != "N/A" else None,
                 "released": data.get("Released") if data.get("Released") != "N/A" else None,
                 "trailer_url": search_trailer(
-                    data.get("Title"),
-                    int(data.get("Year", "0")[:4]),
+                    movie_title,
+                    release_year,
                 ),
-            }
-        )
+        }
+
+        movie = Movie.objects.filter(
+            tittle__iexact=movie_title,
+            realese_year=release_year,
+            owner=request.user,
+        ).first()
+        restored = bool(movie and movie.is_deleted)
+
+        if movie:
+            if restored:
+                for field, value in defaults.items():
+                    setattr(movie, field, value)
+                movie.is_deleted = False
+                movie.save()
+            created = restored
+        else:
+            movie = Movie.objects.create(
+                tittle=movie_title,
+                owner=request.user,
+                **defaults,
+            )
+            created = True
 
         return Response({
             "created": created,
             "movie": movie.tittle,
             "id": movie.id,
+            "restored": restored,
         })
