@@ -14,6 +14,7 @@ import Favorites from "./pages/Favorites";
 import RecentReviews from "./pages/RecentReviews";
 import MyMovies from "./pages/MyMovies";
 import AdminDashboard from "./pages/AdminDashboard";
+import Support from "./pages/Support";
 
 import { getSessionVersion, getToken } from "./services/api";
 
@@ -83,6 +84,7 @@ function App() {
 
       <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
       <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
+      <Route path="/admin/login" element={<PublicOnlyRoute><Login admin /></PublicOnlyRoute>} />
 
       <Route
         path="/home"
@@ -128,6 +130,10 @@ function App() {
       <Route
         path="/admin"
         element={<ProtectedLayout><AdminRoute><AdminDashboard /></AdminRoute></ProtectedLayout>}
+      />
+      <Route
+        path="/support"
+        element={<ProtectedLayout><Support /></ProtectedLayout>}
       />
       </Routes>
     </>

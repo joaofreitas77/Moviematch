@@ -9,6 +9,13 @@ __pycache__/
 
 # Env
 .env
+.env.*
+!.env.example
+
+# Database backups (podem conter dados pessoais)
+*.dump
+*.backup
+*.sql
 
 # SQLite
 db.sqlite3

@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { getAdminStats, getAdminUsers, updateUserStatus } from "../services/api";
 
-const formatDate = (value) => value ? new Date(value).toLocaleDateString("pt-BR", { dateStyle: "medium" }) : "Nunca";
+const formatDate = (value) => value ? new Date(value).toLocaleString("pt-BR", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "America/Sao_Paulo",
+}) : "Nunca";
 
 function AdminDashboard() {
   const [stats, setStats] = useState(null);

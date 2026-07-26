@@ -35,3 +35,18 @@ class AdminUserSerializer(serializers.ModelSerializer):
             "date_joined", "last_login", "movies_count", "reviews_count",
             "favorites_count",
         ]
+
+
+class SupportRequestSerializer(serializers.Serializer):
+    CATEGORY_CHOICES = (
+        ("technical", "Problema técnico"),
+        ("suggestion", "Sugestão de melhoria"),
+        ("account", "Conta e acesso"),
+        ("catalog", "Filmes e catálogo"),
+        ("other", "Outro assunto"),
+    )
+
+    category = serializers.ChoiceField(choices=CATEGORY_CHOICES)
+    subject = serializers.CharField(min_length=5, max_length=120, trim_whitespace=True)
+    email = serializers.EmailField(max_length=254)
+    message = serializers.CharField(min_length=20, max_length=3000, trim_whitespace=True)

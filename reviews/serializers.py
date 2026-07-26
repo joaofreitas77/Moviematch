@@ -38,13 +38,13 @@ class ReviewSerializer(serializers.ModelSerializer):
             "created_at",
         ]
 
-    def get_movie_is_private(self, review):
+    def get_movie_is_private(self, review) -> bool:
         return review.movie.owner_id is not None
 
-    def get_can_access_movie(self, review):
+    def get_can_access_movie(self, review) -> bool:
         return self._get_accessible_movie_id(review) is not None
 
-    def get_accessible_movie_id(self, review):
+    def get_accessible_movie_id(self, review) -> int | None:
         return self._get_accessible_movie_id(review)
 
     def _get_accessible_movie_id(self, review):

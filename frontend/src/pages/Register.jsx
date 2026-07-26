@@ -56,6 +56,7 @@ function Register() {
           Já tem conta? <Link to="/login">Entrar</Link>
         </p>
       </form>
+      <Link className="admin-access-link" to="/admin/login">Admin</Link>
     </main>
   );
 }

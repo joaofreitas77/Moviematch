@@ -1,4 +1,4 @@
-const API_URL = "http://127.0.0.1:8000/api/v1";
+const API_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api/v1").replace(/\/$/, "");
 
 function markSessionChange() {
   const version = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
@@ -10,8 +10,8 @@ export function getSessionVersion() {
   return localStorage.getItem("session_version") || "anonymous";
 }
 
-export async function login(username, password) {
-  const response = await fetch(`${API_URL}/token/`, {
+async function authenticate(endpoint, username, password) {
+  const response = await fetch(`${API_URL}${endpoint}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -20,7 +20,8 @@ export async function login(username, password) {
   });
 
   if (!response.ok) {
-    throw new Error("Usuário ou senha inválidos");
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || "Usuário ou senha inválidos");
   }
 
   const data = await response.json();
@@ -162,6 +163,14 @@ export async function importMovie(title) {
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Não foi possível adicionar o filme");
   return data;
+}
+
+export function login(username, password) {
+  return authenticate("/token/", username, password);
+}
+
+export function loginAdmin(username, password) {
+  return authenticate("/token/admin/", username, password);
 }
 
 export async function removeMovie(movieId) {
@@ -341,4 +350,20 @@ export async function getRecommendations() {
   const response = await authenticatedFetch(`${API_URL}/recomendations/`);
   if (!response.ok) throw new Error("Não foi possível carregar recomendações");
   return response.json();
+}
+
+export async function sendSupportRequest(request) {
+  const response = await authenticatedFetch(`${API_URL}/accounts/support/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+  const data = await response.json();
+
+  if (!response.ok) {
+    const validationMessage = Object.values(data).flat().find(Boolean);
+    throw new Error(data.error || validationMessage || "Não foi possível enviar sua mensagem.");
+  }
+
+  return data;
 }

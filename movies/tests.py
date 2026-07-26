@@ -4,6 +4,7 @@ from unittest.mock import patch
 from rest_framework.test import APITestCase
 
 from .models import Movie
+from .omdb_services import OMDbServiceError
 
 
 def movie_data(title, owner=None):
@@ -95,3 +96,16 @@ class MoviePrivacyTests(APITestCase):
 
         self.assertEqual(response.status_code, 409)
         self.assertIn("catálogo padrão", response.data["error"])
+
+    @patch("movies.views.search_movie", side_effect=OMDbServiceError)
+    def test_import_handles_omdb_outage(self, _search_movie_mock):
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post(
+            "/api/v1/movies/import/",
+            {"title": "Any movie"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 503)
+        self.assertIn("temporariamente indisponível", response.data["error"])

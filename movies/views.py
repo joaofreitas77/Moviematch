@@ -1,3 +1,6 @@
+import re
+
+from django.core.cache import cache
 from django.db.models import Q
 from rest_framework.permissions import AllowAny, BasePermission, IsAuthenticated, SAFE_METHODS
 from .models import Movie
@@ -5,8 +8,11 @@ from .serializers import MovieSerializer
 from .trailer_services import search_trailer
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .omdb_services import search_movie
+from .omdb_services import OMDbServiceError, search_movie
+from core.throttles import MovieImportRateThrottle
 from rest_framework import viewsets
+from drf_spectacular.utils import OpenApiTypes, extend_schema, inline_serializer
+from rest_framework import serializers
 from .models import Movie
 from .serializers import MovieSerializer
 
@@ -68,18 +74,29 @@ class MovieViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         movie = self.get_object()
 
-        if not movie.trailer_url:
+        trailer_miss_key = f"movie:{movie.pk}:trailer-missing"
+        if not movie.trailer_url and not cache.get(trailer_miss_key):
             trailer_url = search_trailer(movie.tittle, movie.realese_year)
             if trailer_url:
                 movie.trailer_url = trailer_url
                 movie.save(update_fields=["trailer_url", "updated_at"])
+            else:
+                cache.set(trailer_miss_key, True, timeout=21600)
 
         serializer = self.get_serializer(movie)
         return Response(serializer.data)
 
 class ImportMovieView(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [MovieImportRateThrottle]
 
+    @extend_schema(
+        request=inline_serializer(
+            name="ImportMovieRequest",
+            fields={"title": serializers.CharField()},
+        ),
+        responses={200: OpenApiTypes.OBJECT, 404: OpenApiTypes.OBJECT, 503: OpenApiTypes.OBJECT},
+    )
     def post(self, request):
         title = request.data.get("title")
 
@@ -89,7 +106,13 @@ class ImportMovieView(APIView):
                 status=400
             )
 
-        data = search_movie(title)
+        try:
+            data = search_movie(title)
+        except OMDbServiceError:
+            return Response(
+                {"error": "O serviço de filmes está temporariamente indisponível."},
+                status=503,
+            )
 
         if data.get("Response") == "False":
             return Response(
@@ -101,7 +124,10 @@ class ImportMovieView(APIView):
                 status=404
             )
         movie_title = data.get("Title")
-        release_year = int(data.get("Year", "0")[:4])
+        year_match = re.search(r"\d{4}", data.get("Year", ""))
+        if not movie_title or not year_match:
+            return Response({"error": "A OMDb retornou dados incompletos para este filme."}, status=502)
+        release_year = int(year_match.group())
 
         if Movie.objects.filter(
             owner__isnull=True,

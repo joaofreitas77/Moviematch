@@ -49,6 +49,16 @@ Moviematch/
 
 ## Como executar localmente
 
+### Inicialização rápida no Windows
+
+Depois de instalar as dependências e configurar o `.env`, execute na raiz do projeto:
+
+```powershell
+.\dev.bat
+```
+
+Esse comando inicia o back-end e o front-end juntos no mesmo terminal, sem precisar ativar o ambiente virtual ou trocar de pasta. Use `Ctrl+C` para encerrar os dois servidores.
+
 ### Pré-requisitos
 
 - Python 3.12 ou superior;
@@ -104,6 +114,16 @@ DB_PORT=5432
 OMDB_API_KEY=sua_chave_omdb
 OMDB_BASE_URL=https://www.omdbapi.com/
 TMDB_API_KEY=sua_chave_tmdb
+
+# Envio das mensagens de suporte (use uma senha de app do Google)
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=jpgf.profissional@gmail.com
+EMAIL_HOST_PASSWORD=sua_senha_de_app
+DEFAULT_FROM_EMAIL=CineLog <jpgf.profissional@gmail.com>
+SUPPORT_EMAIL=jpgf.profissional@gmail.com
 ```
 
 Crie o banco informado no `.env`, aplique as migrações e inicie a API:
@@ -126,6 +146,10 @@ npm run dev
 ```
 
 Acesse a aplicação pelo endereço exibido pelo Vite, normalmente `http://localhost:5173`.
+
+## Publicação
+
+O projeto está preparado para Vercel (frontend), Render (backend), Neon (PostgreSQL) e Resend (e-mails). Consulte o [passo a passo completo](DEPLOY.md) antes de publicar para preservar os dados existentes e manter as credenciais fora do GitHub.
 
 ## Usuário administrador
 

@@ -8,6 +8,7 @@ from .serializers import FavoriteSerializer
 
 
 class FavoriteViewSet(SoftDeleteModelViewSet):
+    queryset = Favorite.objects.none()
     serializer_class = FavoriteSerializer
     permission_classes = [IsAuthenticated]
 

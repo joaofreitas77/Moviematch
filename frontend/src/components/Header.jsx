@@ -57,6 +57,7 @@ function Header() {
         <NavLink to="/favorites" onClick={() => setMenuOpen(false)}><span>Minha lista</span><small>Seus favoritos</small></NavLink>
         <NavLink to="/my-movies" onClick={() => setMenuOpen(false)}><span>Meus filmes</span><small>Catálogo pessoal</small></NavLink>
         <NavLink to="/reviews" onClick={() => setMenuOpen(false)}><span>Avaliações</span><small>Atividade recente</small></NavLink>
+        <NavLink to="/support" onClick={() => setMenuOpen(false)}><span>Suporte</span><small>Contato e sugestões</small></NavLink>
         {user?.is_staff && <NavLink to="/admin" onClick={() => setMenuOpen(false)}><span>Admin</span><small>Central de controle</small></NavLink>}
         <button type="button" onClick={handleLogout} className="mobile-menu-logout">Sair da conta <span aria-hidden="true">↗</span></button>
       </nav>

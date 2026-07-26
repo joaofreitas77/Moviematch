@@ -155,7 +155,15 @@ function Home() {
         )}
       </div>
 
-      <footer className="footer"><span className="logo footer-logo">CINE<span>LOG</span></span><p>Descubra. Avalie. Guarde seus favoritos.</p></footer>
+      <footer className="footer">
+        <div className="footer-brand"><span className="logo footer-logo">CINE<span>LOG</span></span><p>Descubra. Avalie. Guarde seus favoritos.</p></div>
+        <div className="data-credits" aria-label="Créditos das fontes de dados">
+          <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer" aria-label="Visitar The Movie Database">
+            <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-5bdc75aaebeb75dc7ae79426ddd9be3b2be1e342510f8202baf6bffa71d7f5c4.svg" alt="TMDB" />
+          </a>
+          <p>Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB. Dados complementares fornecidos pela <a href="https://www.omdbapi.com/" target="_blank" rel="noreferrer">OMDb API</a>.</p>
+        </div>
+      </footer>
     </main>
   );
 }

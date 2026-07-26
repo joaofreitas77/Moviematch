@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: cinelog-api
+    runtime: python
+    plan: free
+    buildCommand: bash ./build.sh
+    startCommand: python manage.py migrate && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 120
+    healthCheckPath: /api/v1/health/
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.5
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false
+      - key: OMDB_API_KEY
+        sync: false
+      - key: OMDB_BASE_URL
+        value: https://www.omdbapi.com/
+      - key: TMDB_API_KEY
+        sync: false
+      - key: SUPPORT_EMAIL
+        value: jpgf.profissional@gmail.com
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        value: CineLog <onboarding@resend.dev>

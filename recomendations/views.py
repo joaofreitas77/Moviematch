@@ -4,6 +4,7 @@ from django.db.models import Avg, Q
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import OpenApiTypes, extend_schema
 
 from favorites.models import Favorite
 from movies.models import Movie
@@ -18,6 +19,7 @@ def movie_genres(movie):
 class RecommendationView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses={200: OpenApiTypes.OBJECT})
     def get(self, request):
         user = request.user
         genre_scores = defaultdict(float)
