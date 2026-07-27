@@ -2,11 +2,28 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=6)
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(
+        write_only=True,
+        min_length=6,
+        error_messages={"min_length": "A senha deve ter pelo menos 6 caracteres."},
+    )
 
     class Meta:
         model = User
         fields = ["id", "username", "email", "password"]
+
+    def validate_username(self, username):
+        username = username.strip()
+        if User.objects.filter(username__iexact=username).exists():
+            raise serializers.ValidationError("Este nome de usuário já está em uso.")
+        return username
+
+    def validate_email(self, email):
+        email = email.strip().lower()
+        if User.objects.filter(email__iexact=email).exists():
+            raise serializers.ValidationError("Este e-mail já está cadastrado.")
+        return email
 
     def create(self, validated_data):
         user = User.objects.create_user(

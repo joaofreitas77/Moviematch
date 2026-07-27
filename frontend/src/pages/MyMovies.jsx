@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import MovieCard from "../components/MovieCard";
-import { getMyMovies, importMovie, removeMovie } from "../services/api";
+import { addFavorite, getMyMovies, importMovie, removeMovie } from "../services/api";
 
 function MyMovies() {
   const [movies, setMovies] = useState([]);
@@ -49,6 +49,15 @@ function MyMovies() {
     }
   }
 
+  async function handleFavorite(movieId) {
+    try {
+      await addFavorite(movieId);
+      notify("Filme adicionado à Minha lista.");
+    } catch (error) {
+      notify(error.message);
+    }
+  }
+
   return (
     <main className="page private-page">
       {message && <div className="toast" role="status">{message}</div>}
@@ -76,7 +85,7 @@ function MyMovies() {
           <div className="personal-movie-grid">
             {movies.map((movie) => (
               <div key={movie.id} className="personal-movie-item">
-                <MovieCard movie={movie} showFavorite={false} />
+                <MovieCard movie={movie} onFavorite={handleFavorite} />
                 <button className="remove-favorite-button" onClick={() => handleRemove(movie.id)}>Remover do catálogo</button>
               </div>
             ))}

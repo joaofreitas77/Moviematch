@@ -17,8 +17,8 @@ function Register() {
     try {
       await register(username, email, password);
       navigate("/login", { replace: true });
-    } catch {
-      setErro("Erro ao cadastrar. Tente outro usuário.");
+    } catch (error) {
+      setErro(error.message);
     }
   }
 
@@ -34,6 +34,9 @@ function Register() {
           placeholder="Usuário"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          required
+          minLength={3}
+          autoComplete="username"
         />
 
         <input
@@ -41,13 +44,18 @@ function Register() {
           placeholder="E-mail"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
+          autoComplete="email"
         />
 
         <input
           type="password"
-          placeholder="Senha"
+          placeholder="Senha (mínimo de 6 caracteres)"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
+          minLength={6}
+          autoComplete="new-password"
         />
 
         <button type="submit">Cadastrar</button>

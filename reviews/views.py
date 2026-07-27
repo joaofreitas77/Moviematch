@@ -1,6 +1,7 @@
 from rest_framework.permissions import BasePermission, IsAuthenticated, SAFE_METHODS
 
 from core.viewsets import SoftDeleteModelViewSet
+from movies.models import Movie
 from .models import Review
 from .serializers import ReviewSerializer
 
@@ -19,9 +20,26 @@ class ReviewViewSet(SoftDeleteModelViewSet):
     permission_classes = [IsAuthenticated, ReviewObjectPermission]
 
     def get_queryset(self):
-        return Review.objects.filter(
+        queryset = Review.objects.filter(
             is_deleted=False
         ).select_related("movie", "user").order_by("-created_at")
+
+        movie_id = self.request.query_params.get("movie")
+        if movie_id:
+            visible_movies = Movie.objects.filter(is_deleted=False)
+            if not self.request.user.is_staff:
+                visible_movies = visible_movies.filter(
+                    owner__isnull=True
+                ) | visible_movies.filter(owner=self.request.user)
+            movie = visible_movies.filter(pk=movie_id).first()
+            if movie is None:
+                return queryset.none()
+            queryset = queryset.filter(
+                movie__tittle__iexact=movie.tittle,
+                movie__realese_year=movie.realese_year,
+            )
+
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

@@ -109,6 +109,10 @@ img { max-width: 100%; }
 
 .login-transition { position: fixed; z-index: 1000; inset: 0; overflow: hidden; display: grid; place-items: center; background: #000; animation: login-screen 1.8s ease both; }
 .login-transition img { width: 100%; height: 100%; object-fit: contain; object-position: center; animation: login-brand 1.8s cubic-bezier(.22,.75,.25,1) both; }
+.global-loading-overlay { position: fixed; z-index: 950; inset: 0; display: grid; place-content: center; justify-items: center; gap: 14px; color: #fff; background: rgba(3,3,4,.78); backdrop-filter: blur(4px); }
+.global-loading-overlay strong { font: 700 13px "Manrope"; letter-spacing: .7px; }
+.global-loading-spinner { width: 46px; height: 46px; border: 4px solid rgba(255,255,255,.13); border-top-color: var(--red); border-right-color: var(--red); border-radius: 50%; animation: global-spin .75s linear infinite; }
+@keyframes global-spin { to { transform: rotate(360deg); } }
 @keyframes login-screen {
   0% { opacity: 0; }
   12%, 76% { opacity: 1; }
@@ -161,6 +165,17 @@ img { max-width: 100%; }
 .review-form textarea { min-height: 110px; resize: vertical; color: #fff; background: #0c0c0e; border: 1px solid var(--line); border-radius: 8px; padding: 14px; outline: 0; }
 .review-form textarea:focus { border-color: var(--red); }
 .review-submit-button { align-self: start; border: 0; border-radius: 7px; background: var(--red); color: #fff; font-weight: 700; padding: 11px 20px; }
+.movie-reviews-section { max-width: 1250px; margin: 28px auto 0; padding: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.movie-reviews-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
+.movie-reviews-heading h2 { margin-top: 5px; font: 700 23px "Manrope"; }
+.movie-reviews-heading > span { color: var(--muted); font-size: 12px; }
+.movie-review-list { display: grid; gap: 12px; }
+.movie-review-item { padding: 18px; background: #0c0c0e; border: 1px solid var(--line); border-radius: 9px; }
+.movie-review-user { display: flex; align-items: center; gap: 11px; }
+.review-avatar { width: 36px; height: 36px; display: grid; place-items: center; flex: none; color: #fff; background: linear-gradient(145deg,var(--red),#7b050b); border-radius: 50%; font-weight: 800; }
+.movie-review-user strong, .movie-review-user small { display: block; }
+.movie-review-user small { margin-top: 2px; color: #717179; font-size: 11px; }
+.movie-review-item > p:last-child { color: #c3c3c9; line-height: 1.55; }
 
 .catalog > h2 { font: 700 30px "Manrope"; margin: 110px 0 28px; }
 .favorite-card-wrapper { min-width: 0; }
@@ -338,6 +353,8 @@ img { max-width: 100%; }
 }
 
 @media (max-width: 520px) {
+  .movie-reviews-section { padding: 20px; }
+  .movie-reviews-heading { align-items: flex-start; flex-direction: column; }
   .hero-content p { font-size: 15px; -webkit-line-clamp: 2; }
   .hero-actions > * { flex: 1; padding: 0 13px; font-size: 13px; }
   .movie-row { grid-auto-columns: 142px; gap: 12px; }

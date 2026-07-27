@@ -63,3 +63,21 @@ class ReviewPermissionTests(APITestCase):
         self.assertEqual(review_data["accessible_movie_id"], own_copy.id)
         self.assertEqual(self.client.get(f"/api/v1/movies/{own_copy.id}/").status_code, 200)
         self.assertEqual(self.client.get(f"/api/v1/movies/{private_movie.id}/").status_code, 404)
+
+    def test_movie_filter_groups_reviews_for_same_title_and_year(self):
+        author_copy = Movie.objects.create(
+            tittle="Minions", description="First copy", type="movie",
+            genre="Animation", realese_year=2015, owner=self.author,
+        )
+        other_copy = Movie.objects.create(
+            tittle="minions", description="Second copy", type="movie",
+            genre="Animation", realese_year=2015, owner=self.other,
+        )
+        Review.objects.create(user=self.author, movie=author_copy, rating=5, comment="Great")
+        Review.objects.create(user=self.other, movie=other_copy, rating=4, comment="Good")
+
+        self.client.force_authenticate(self.author)
+        response = self.client.get(f"/api/v1/reviews/?movie={author_copy.id}")
+        self.assertEqual(response.status_code, 200)
+        comments = {review["comment"] for review in response.data["results"]}
+        self.assertEqual(comments, {"Great", "Good"})

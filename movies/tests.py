@@ -41,6 +41,18 @@ class MoviePrivacyTests(APITestCase):
         response = self.client.delete(f"/api/v1/movies/{self.public_movie.id}/")
         self.assertEqual(response.status_code, 403)
 
+    def test_standard_catalog_excludes_personal_movies(self):
+        self.client.force_authenticate(self.user)
+        response = self.client.get("/api/v1/movies/")
+        ids = {movie["id"] for movie in response.data["results"]}
+        self.assertIn(self.public_movie.id, ids)
+        self.assertNotIn(self.private_movie.id, ids)
+
+        response = self.client.get("/api/v1/movies/?mine=true")
+        ids = {movie["id"] for movie in response.data["results"]}
+        self.assertIn(self.private_movie.id, ids)
+        self.assertNotIn(self.public_movie.id, ids)
+
     def test_user_cannot_create_personal_copy_of_public_movie(self):
         self.client.force_authenticate(self.user)
         response = self.client.post(

@@ -38,6 +38,7 @@ function ProtectedLayout({ children }) {
 function App() {
   const [sessionVersion, setSessionVersion] = useState(getSessionVersion);
   const [showLoginTransition, setShowLoginTransition] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     function synchronizeSession() {
@@ -52,6 +53,26 @@ function App() {
       window.removeEventListener("pageshow", synchronizeSession);
       window.removeEventListener("popstate", synchronizeSession);
       window.removeEventListener("cinelog:session-change", synchronizeSession);
+    };
+  }, []);
+
+  useEffect(() => {
+    let showTimer;
+
+    function synchronizeLoading(event) {
+      if (event.detail.pending > 0) {
+        window.clearTimeout(showTimer);
+        showTimer = window.setTimeout(() => setIsLoading(true), 120);
+      } else {
+        window.clearTimeout(showTimer);
+        setIsLoading(false);
+      }
+    }
+
+    window.addEventListener("cinelog:loading", synchronizeLoading);
+    return () => {
+      window.removeEventListener("cinelog:loading", synchronizeLoading);
+      window.clearTimeout(showTimer);
     };
   }, []);
 
@@ -77,6 +98,12 @@ function App() {
       {showLoginTransition && (
         <div className="login-transition" role="status" aria-label="Login realizado. Carregando CineLog.">
           <img src="/animation.svg" alt="CineLog" />
+        </div>
+      )}
+      {isLoading && !showLoginTransition && (
+        <div className="global-loading-overlay" role="status" aria-live="polite">
+          <span className="global-loading-spinner" aria-hidden="true" />
+          <strong>Carregando...</strong>
         </div>
       )}
       <Routes key={sessionVersion}>

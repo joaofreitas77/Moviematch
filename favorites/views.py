@@ -21,6 +21,10 @@ class FavoriteViewSet(SoftDeleteModelViewSet):
     def create(self, request, *args, **kwargs):
         movie_id = request.data.get("movie")
 
+        # Valida inclusive favoritos antigos que estejam sendo restaurados.
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
         favorite = Favorite.objects.filter(
             user=request.user,
             movie_id=movie_id
@@ -33,8 +37,6 @@ class FavoriteViewSet(SoftDeleteModelViewSet):
             serializer = self.get_serializer(favorite)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
         serializer.save(user=request.user)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)

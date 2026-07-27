@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { getMovieById, addReview } from "../services/api";
+import { getMovieById, addReview, getMovieReviews } from "../services/api";
 
 function getYouTubeEmbedUrl(url) {
   if (!url) return null;
@@ -35,6 +35,7 @@ function MovieDetails() {
   }
 
   const [movie, setMovie] = useState(null);
+  const [reviews, setReviews] = useState([]);
   const [erro, setErro] = useState("");
 
   const [rating, setRating] = useState(0);
@@ -47,8 +48,11 @@ function MovieDetails() {
   }
 
   useEffect(() => {
-    getMovieById(id)
-      .then(setMovie)
+    Promise.all([getMovieById(id), getMovieReviews(id)])
+      .then(([movieData, reviewData]) => {
+        setMovie(movieData);
+        setReviews(reviewData);
+      })
       .catch(() => setErro("Erro ao carregar detalhes do filme"));
   }, [id]);
 
@@ -62,6 +66,7 @@ function MovieDetails() {
 
     try {
       await addReview(movie.id, rating, comment);
+      setReviews(await getMovieReviews(movie.id));
       showMessage("Avaliação enviada com sucesso!");
       setRating(0);
       setComment("");
@@ -195,6 +200,43 @@ function MovieDetails() {
             Enviar avaliação
           </button>
         </form>
+      </section>
+
+      <section className="movie-reviews-section">
+        <div className="movie-reviews-heading">
+          <div>
+            <span className="section-eyebrow">OPINIÕES DA COMUNIDADE</span>
+            <h2>Avaliações de {movie.tittle}</h2>
+          </div>
+          <span>{reviews.length} {reviews.length === 1 ? "avaliação" : "avaliações"}</span>
+        </div>
+
+        {reviews.length ? (
+          <div className="movie-review-list">
+            {reviews.map((review) => (
+              <article className="movie-review-item" key={review.id}>
+                <div className="movie-review-user">
+                  <span className="review-avatar" aria-hidden="true">
+                    {(review.username || "U").slice(0, 1).toUpperCase()}
+                  </span>
+                  <div>
+                    <strong>{review.username || "Usuário"}</strong>
+                    <small>{new Date(review.created_at).toLocaleDateString("pt-BR")}</small>
+                  </div>
+                </div>
+                <p className="review-stars" aria-label={`${review.rating} de 5 estrelas`}>
+                  {"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}
+                </p>
+                <p>{review.comment || "Sem comentário."}</p>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-panel">
+            <strong>Ainda não há avaliações.</strong>
+            <p>Seja a primeira pessoa a compartilhar uma opinião sobre este filme.</p>
+          </div>
+        )}
       </section>
     </main>
   );

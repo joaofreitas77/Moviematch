@@ -1,5 +1,27 @@
 const API_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api/v1").replace(/\/$/, "");
 
+let pendingRequests = 0;
+
+function updateLoadingState(change) {
+  pendingRequests = Math.max(0, pendingRequests + change);
+  window.dispatchEvent(new CustomEvent("cinelog:loading", {
+    detail: { pending: pendingRequests },
+  }));
+}
+
+async function trackedFetch(url, options) {
+  updateLoadingState(1);
+  try {
+    return await fetch(url, options);
+  } finally {
+    updateLoadingState(-1);
+  }
+}
+
+function getValidationMessage(data) {
+  return Object.values(data || {}).flat().find(Boolean);
+}
+
 function markSessionChange() {
   const version = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
   localStorage.setItem("session_version", version);
@@ -11,7 +33,7 @@ export function getSessionVersion() {
 }
 
 async function authenticate(endpoint, username, password) {
-  const response = await fetch(`${API_URL}${endpoint}`, {
+  const response = await trackedFetch(`${API_URL}${endpoint}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -35,7 +57,7 @@ async function authenticate(endpoint, username, password) {
 }
 
 export async function register(username, email, password) {
-  const response = await fetch(`${API_URL}/accounts/register/`, {
+  const response = await trackedFetch(`${API_URL}/accounts/register/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -44,7 +66,8 @@ export async function register(username, email, password) {
   });
 
   if (!response.ok) {
-    throw new Error("Erro ao cadastrar usuário");
+    const error = await response.json().catch(() => ({}));
+    throw new Error(getValidationMessage(error) || "Erro ao cadastrar usuário.");
   }
 
   return await response.json();
@@ -68,7 +91,7 @@ async function refreshAccessToken() {
     throw new Error("Sessão expirada");
   }
 
-  const response = await fetch(`${API_URL}/token/refresh/`, {
+  const response = await trackedFetch(`${API_URL}/token/refresh/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refresh }),
@@ -89,11 +112,11 @@ async function authenticatedFetch(url, options = {}) {
     ...options.headers,
     Authorization: `Bearer ${getToken()}`,
   };
-  let response = await fetch(url, { ...options, headers });
+  let response = await trackedFetch(url, { ...options, headers });
 
   if (response.status === 401) {
     const token = await refreshAccessToken();
-    response = await fetch(url, {
+    response = await trackedFetch(url, {
       ...options,
       headers: { ...headers, Authorization: `Bearer ${token}` },
     });
@@ -113,7 +136,7 @@ export async function getMovies() {
   let nextPage = `${API_URL}/movies/`;
 
   while (nextPage) {
-    const response = await fetch(nextPage);
+    const response = await trackedFetch(nextPage);
 
     if (!response.ok) {
       throw new Error("Erro ao buscar filmes");
@@ -134,8 +157,9 @@ export async function getMovies() {
 
 export async function getMovieById(id) {
   const response = await authenticatedFetch(`${API_URL}/movies/${id}/`);
-
-  return await response.json();
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.detail || "Não foi possível carregar o filme.");
+  return data;
 }
 
 export async function getMyMovies() {
@@ -204,7 +228,7 @@ export async function updateUserStatus(userId, isActive) {
 export async function getFavorites() {
   const token = getToken();
 
-  const response = await fetch(`${API_URL}/favorites/`, {
+  const response = await trackedFetch(`${API_URL}/favorites/`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -222,7 +246,7 @@ export async function getFavorites() {
 export async function addFavorite(movieId) {
   const token = getToken();
 
-  const response = await fetch(`${API_URL}/favorites/`, {
+  const response = await trackedFetch(`${API_URL}/favorites/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -235,11 +259,8 @@ export async function addFavorite(movieId) {
 
   const data = await response.json();
 
-  console.log("STATUS FAVORITE:", response.status);
-  console.log("RESPOSTA FAVORITE:", data);
-
   if (!response.ok) {
-    throw new Error(JSON.stringify(data));
+    throw new Error(getValidationMessage(data) || "Não foi possível adicionar aos favoritos.");
   }
 
   return data;
@@ -248,7 +269,7 @@ export async function addFavorite(movieId) {
 export async function removeFavorite(favoriteId) {
   const token = getToken();
 
-  const response = await fetch(`${API_URL}/favorites/${favoriteId}/`, {
+  const response = await trackedFetch(`${API_URL}/favorites/${favoriteId}/`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -263,7 +284,7 @@ export async function removeFavorite(favoriteId) {
 export async function getReviews() {
   let token = getToken();
 
-  let response = await fetch(`${API_URL}/reviews/`, {
+  let response = await trackedFetch(`${API_URL}/reviews/`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -272,7 +293,7 @@ export async function getReviews() {
   if (response.status === 401) {
     token = await refreshAccessToken();
 
-    response = await fetch(`${API_URL}/reviews/`, {
+    response = await trackedFetch(`${API_URL}/reviews/`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -288,10 +309,26 @@ export async function getReviews() {
   return data.results || data;
 }
 
+export async function getMovieReviews(movieId) {
+  const reviews = [];
+  let nextPage = `${API_URL}/reviews/?movie=${encodeURIComponent(movieId)}`;
+
+  while (nextPage) {
+    const response = await authenticatedFetch(nextPage);
+    if (!response.ok) throw new Error("Não foi possível carregar as avaliações deste filme.");
+    const data = await response.json();
+    if (Array.isArray(data)) return data;
+    reviews.push(...(data.results || []));
+    nextPage = data.next;
+  }
+
+  return reviews;
+}
+
 export async function addReview(movieId, rating, comment) {
   let token = getToken();
 
-  let response = await fetch(`${API_URL}/reviews/`, {
+  let response = await trackedFetch(`${API_URL}/reviews/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -307,7 +344,7 @@ export async function addReview(movieId, rating, comment) {
   if (response.status === 401) {
     token = await refreshAccessToken();
 
-    response = await fetch(`${API_URL}/reviews/`, {
+    response = await trackedFetch(`${API_URL}/reviews/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -37,17 +37,20 @@ class MovieViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = Movie.objects.filter(is_deleted=False)
 
-        if self.request.user.is_staff:
+        mine = self.request.query_params.get("mine") == "true"
+        if mine:
+            if not self.request.user.is_authenticated:
+                return queryset.none()
+            queryset = queryset.filter(owner=self.request.user)
+        elif self.action == "list":
+            # O catálogo padrão nunca mistura títulos das bibliotecas pessoais.
+            queryset = queryset.filter(owner__isnull=True)
+        elif self.request.user.is_staff:
             pass
         elif self.request.user.is_authenticated:
             queryset = queryset.filter(Q(owner__isnull=True) | Q(owner=self.request.user))
         else:
             queryset = queryset.filter(owner__isnull=True)
-
-        if self.request.query_params.get("mine") == "true":
-            if not self.request.user.is_authenticated:
-                return queryset.none()
-            queryset = queryset.filter(owner=self.request.user)
 
         title = self.request.query_params.get('title')
         genre = self.request.query_params.get('genre')
@@ -66,7 +69,7 @@ class MovieViewSet(viewsets.ModelViewSet):
         if release_year:
             queryset = queryset.filter(realese_year=release_year)
 
-        return queryset
+        return queryset.order_by("-created_at")
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)

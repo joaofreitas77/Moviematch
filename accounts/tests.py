@@ -5,6 +5,37 @@ from unittest.mock import patch
 from rest_framework.test import APITestCase
 
 
+class RegisterTests(APITestCase):
+    def test_rejects_duplicate_username_ignoring_case(self):
+        User.objects.create_user("ExistingUser", email="first@example.com", password="123456")
+        response = self.client.post(
+            "/api/v1/accounts/register/",
+            {"username": "existinguser", "email": "other@example.com", "password": "123456"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("username", response.data)
+
+    def test_rejects_duplicate_email_ignoring_case(self):
+        User.objects.create_user("first", email="Member@Example.com", password="123456")
+        response = self.client.post(
+            "/api/v1/accounts/register/",
+            {"username": "second", "email": "member@example.com", "password": "123456"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("email", response.data)
+
+    def test_requires_at_least_six_password_characters(self):
+        response = self.client.post(
+            "/api/v1/accounts/register/",
+            {"username": "new-user", "email": "new@example.com", "password": "12345"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("password", response.data)
+
+
 class AdminAccountsTests(APITestCase):
     def setUp(self):
         self.admin = User.objects.create_user("admin", password="test", is_staff=True)
@@ -82,6 +113,7 @@ class AdminAccountsTests(APITestCase):
 @override_settings(
     EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
     SUPPORT_EMAIL="jpgf.profissional@gmail.com",
+    RESEND_API_KEY="",
 )
 class SupportRequestTests(APITestCase):
     def setUp(self):
