@@ -3,6 +3,7 @@ from django.contrib.auth.hashers import check_password
 from django.db.models import Count
 from django.db import transaction
 from django.conf import settings
+import logging
 from django.utils import timezone
 from django.utils.html import escape
 from rest_framework import generics, status
@@ -29,6 +30,8 @@ from .serializers import (
     VerifyEmailSerializer,
 )
 
+logger = logging.getLogger(__name__)
+
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
@@ -41,6 +44,7 @@ class RegisterView(generics.CreateAPIView):
         try:
             issue_verification_code(user)
         except Exception:
+            logger.exception("Falha ao enviar código de confirmação para o novo cadastro")
             user.delete()
             return Response(
                 {"error": "Não foi possível enviar o código de confirmação. Verifique o e-mail e tente novamente."},
@@ -102,6 +106,7 @@ class ResendVerificationView(APIView):
         try:
             issue_verification_code(user)
         except Exception:
+            logger.exception("Falha ao reenviar código de confirmação")
             return Response({"error": "Não foi possível enviar um novo código agora."}, status=503)
         return Response({"message": "Novo código enviado."})
 

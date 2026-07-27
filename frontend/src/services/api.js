@@ -57,13 +57,26 @@ async function authenticate(endpoint, username, password) {
 }
 
 export async function register(username, email, password) {
-  const response = await trackedFetch(`${API_URL}/accounts/register/`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ username, email, password }),
-  });
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 25000);
+  let response;
+  try {
+    response = await trackedFetch(`${API_URL}/accounts/register/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, email, password }),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw new Error("O servidor demorou para enviar o código. Tente novamente em instantes.", { cause: error });
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));

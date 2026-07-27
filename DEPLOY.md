@@ -76,6 +76,7 @@ Configure uma conta SMTP. Para Gmail, ative a verificação em duas etapas e cri
 | `EMAIL_USE_TLS` | `True` |
 | `EMAIL_HOST_USER` | Conta Gmail que enviará os códigos |
 | `EMAIL_HOST_PASSWORD` | Senha de app do Gmail |
+| `EMAIL_TIMEOUT` | `15` |
 | `DEFAULT_FROM_EMAIL` | `CineLog <seu_email@gmail.com>` |
 | `EMAIL_VERIFICATION_CODE_MINUTES` | `15` |
 | `EMAIL_VERIFICATION_RESEND_SECONDS` | `60` |
