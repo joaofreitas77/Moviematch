@@ -38,12 +38,21 @@ SELECT COUNT(*) AS favoritos FROM favorites_favorite;
 
 No momento da preparação, o banco local tinha 4 usuários, 22 filmes, 7 avaliações e 8 favoritos. Se novos dados forem criados antes da publicação, use as contagens mais recentes como referência.
 
-## 4. Configurar os e-mails no Resend
+## 4. Configurar os e-mails
+
+O CineLog usa dois canais independentes: o Resend entrega as solicitações de suporte ao administrador, enquanto o SMTP envia os códigos de confirmação diretamente aos novos usuários.
+
+### Suporte pelo Resend
 
 1. Crie a conta em <https://resend.com/> usando `jpgf.profissional@gmail.com`.
 2. Abra **API Keys**, crie uma chave somente para envio e copie-a.
-3. Como o destinatário é o mesmo e-mail da conta Resend, pode-se iniciar com `CineLog <onboarding@resend.dev>` sem domínio próprio.
-4. Guarde a chave para informar no Render como `RESEND_API_KEY`.
+3. Para enviar códigos de confirmação a qualquer usuário, adicione e valide um domínio próprio em **Domains**. O remetente de testes `onboarding@resend.dev` só envia para o endereço proprietário da conta Resend.
+4. Depois que o domínio estiver validado, escolha um remetente, por exemplo `CineLog <contas@seudominio.com>`.
+5. Guarde a chave e o remetente para informar no Render.
+
+### Confirmação de conta por SMTP
+
+Configure uma conta SMTP. Para Gmail, ative a verificação em duas etapas e crie uma senha de app. Use essa senha em `EMAIL_HOST_PASSWORD`; a senha comum da conta não funciona.
 
 ## 5. Publicar o backend no Render
 
@@ -60,6 +69,16 @@ No momento da preparação, o banco local tinha 4 usuários, 22 filmes, 7 avalia
 | `OMDB_API_KEY` | Chave da OMDb |
 | `TMDB_API_KEY` | Chave da TMDB |
 | `RESEND_API_KEY` | Chave criada no Resend |
+| `RESEND_FROM_EMAIL` | Remetente do domínio validado, por exemplo `CineLog <contas@seudominio.com>` |
+| `EMAIL_BACKEND` | `django.core.mail.backends.smtp.EmailBackend` |
+| `EMAIL_HOST` | `smtp.gmail.com` |
+| `EMAIL_PORT` | `587` |
+| `EMAIL_USE_TLS` | `True` |
+| `EMAIL_HOST_USER` | Conta Gmail que enviará os códigos |
+| `EMAIL_HOST_PASSWORD` | Senha de app do Gmail |
+| `DEFAULT_FROM_EMAIL` | `CineLog <seu_email@gmail.com>` |
+| `EMAIL_VERIFICATION_CODE_MINUTES` | `15` |
+| `EMAIL_VERIFICATION_RESEND_SECONDS` | `60` |
 
 4. Confirme a criação do serviço gratuito. O Render instalará as dependências, coletará arquivos estáticos, aplicará as migrações e iniciará o Gunicorn.
 5. Copie a URL final, semelhante a `https://cinelog-api.onrender.com`.
@@ -88,6 +107,7 @@ No momento da preparação, o banco local tinha 4 usuários, 22 filmes, 7 avalia
 - Importar um filme que não esteja no catálogo padrão.
 - Abrir um trailer.
 - Enviar uma solicitação de suporte e conferir o e-mail administrativo.
+- Criar uma conta com um e-mail real, receber o código e confirmar que o login só funciona depois da ativação.
 - Conferir o painel administrativo e o campo de último acesso.
 
 ## Limitação esperada do plano gratuito

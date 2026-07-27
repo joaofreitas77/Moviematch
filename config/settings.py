@@ -122,12 +122,16 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 8},
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+    {
+        'NAME': 'accounts.validators.PasswordCompositionValidator',
     },
 ]
 
@@ -197,6 +201,8 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='CineLog <no-reply@cin
 SUPPORT_EMAIL = config('SUPPORT_EMAIL', default='jpgf.profissional@gmail.com')
 RESEND_API_KEY = config('RESEND_API_KEY', default='')
 RESEND_FROM_EMAIL = config('RESEND_FROM_EMAIL', default='CineLog <onboarding@resend.dev>')
+EMAIL_VERIFICATION_CODE_MINUTES = config('EMAIL_VERIFICATION_CODE_MINUTES', default=15, cast=int)
+EMAIL_VERIFICATION_RESEND_SECONDS = config('EMAIL_VERIFICATION_RESEND_SECONDS', default=60, cast=int)
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 if not DEBUG:

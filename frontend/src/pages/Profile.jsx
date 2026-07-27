@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import UserAvatar from "../components/UserAvatar";
 import { applyTheme, getCurrentUser, updateProfile } from "../services/api";
+import { isPasswordComplex, passwordRequirements } from "../utils/password";
 
 function prepareAvatar(file) {
   return new Promise((resolve, reject) => {
@@ -81,8 +82,8 @@ function Profile() {
     const emailChanged = normalizedEmail !== (user.email || "").toLowerCase();
     const passwordChanged = Boolean(newPassword);
 
-    if (passwordChanged && newPassword.length < 6) {
-      return notify("A nova senha deve ter pelo menos 6 caracteres.", "error");
+    if (passwordChanged && !isPasswordComplex(newPassword)) {
+      return notify("A nova senha deve atender a todos os requisitos de segurança.", "error");
     }
     if (passwordChanged && newPassword !== confirmPassword) {
       return notify("A confirmação da senha não confere.", "error");
@@ -195,9 +196,12 @@ function Profile() {
               <p>Use pelo menos 6 caracteres e evite reutilizar senhas.</p>
             </div>
             <div className="settings-form password-settings-form">
-              <label><span>Nova senha</span><input type="password" required minLength="6" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} autoComplete="new-password" /></label>
-              <label><span>Confirmar nova senha</span><input type="password" required minLength="6" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} autoComplete="new-password" /></label>
+              <label><span>Nova senha</span><input type="password" required minLength="8" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} autoComplete="new-password" /></label>
+              <label><span>Confirmar nova senha</span><input type="password" required minLength="8" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} autoComplete="new-password" /></label>
             </div>
+            <ul className="password-requirements profile-password-requirements">
+              {passwordRequirements.map(({ label, test }) => <li key={label} className={test(newPassword) ? "valid" : ""}>{label}</li>)}
+            </ul>
           </section>
 
           <section className="settings-card" id="appearance">

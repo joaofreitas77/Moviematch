@@ -84,6 +84,7 @@ function Header() {
         <NavLink to="/favorites" onClick={() => setMenuOpen(false)}><span>Minha lista</span><small>Seus favoritos</small></NavLink>
         <NavLink to="/my-movies" onClick={() => setMenuOpen(false)}><span>Meus filmes</span><small>Catálogo pessoal</small></NavLink>
         <NavLink to="/reviews" onClick={() => setMenuOpen(false)}><span>Avaliações</span><small>Atividade recente</small></NavLink>
+        <NavLink to="/about" onClick={() => setMenuOpen(false)}><span>Sobre</span><small>Conheça o CineLog</small></NavLink>
         <NavLink to="/support" onClick={() => setMenuOpen(false)}><span>Suporte</span><small>Contato e sugestões</small></NavLink>
         <NavLink to="/profile" onClick={() => setMenuOpen(false)} className="mobile-profile-link"><span>Perfil</span><small>Conta e aparência</small></NavLink>
         {user?.is_staff && <NavLink to="/admin" onClick={() => setMenuOpen(false)}><span>Admin</span><small>Central de controle</small></NavLink>}

@@ -73,6 +73,28 @@ export async function register(username, email, password) {
   return await response.json();
 }
 
+export async function verifyEmail(email, code) {
+  const response = await trackedFetch(`${API_URL}/accounts/verify-email/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, code }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || getValidationMessage(data) || "Não foi possível confirmar o e-mail.");
+  return data;
+}
+
+export async function resendVerification(email) {
+  const response = await trackedFetch(`${API_URL}/accounts/resend-verification/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || getValidationMessage(data) || "Não foi possível reenviar o código.");
+  return data;
+}
+
 export function getToken() {
   return localStorage.getItem("access");
 }

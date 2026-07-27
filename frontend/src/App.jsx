@@ -16,6 +16,8 @@ import MyMovies from "./pages/MyMovies";
 import AdminDashboard from "./pages/AdminDashboard";
 import Support from "./pages/Support";
 import Profile from "./pages/Profile";
+import About from "./pages/About";
+import VerifyEmail from "./pages/VerifyEmail";
 
 import { getSessionVersion, getToken } from "./services/api";
 
@@ -112,6 +114,7 @@ function App() {
 
       <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
       <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
+      <Route path="/verify-email" element={<PublicOnlyRoute><VerifyEmail /></PublicOnlyRoute>} />
       <Route path="/admin/login" element={<PublicOnlyRoute><Login admin /></PublicOnlyRoute>} />
 
       <Route
@@ -162,6 +165,10 @@ function App() {
       <Route
         path="/support"
         element={<ProtectedLayout><Support /></ProtectedLayout>}
+      />
+      <Route
+        path="/about"
+        element={<ProtectedLayout><About /></ProtectedLayout>}
       />
       <Route
         path="/profile"

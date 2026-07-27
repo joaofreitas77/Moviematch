@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "../services/api";
+import { isPasswordComplex, passwordRequirements } from "../utils/password";
 
 function Register() {
   const navigate = useNavigate();
@@ -13,10 +14,15 @@ function Register() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    setErro("");
+    if (!isPasswordComplex(password)) {
+      setErro("Crie uma senha que atenda a todos os requisitos abaixo.");
+      return;
+    }
 
     try {
-      await register(username, email, password);
-      navigate("/login", { replace: true });
+      const result = await register(username, email, password);
+      navigate("/verify-email", { replace: true, state: { email: result.email } });
     } catch (error) {
       setErro(error.message);
     }
@@ -50,13 +56,18 @@ function Register() {
 
         <input
           type="password"
-          placeholder="Senha (mínimo de 6 caracteres)"
+          placeholder="Crie uma senha segura"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          minLength={6}
+          minLength={8}
           autoComplete="new-password"
         />
+        <ul className="password-requirements" aria-label="Requisitos da senha">
+          {passwordRequirements.map(({ label, test }) => (
+            <li key={label} className={test(password) ? "valid" : ""}>{label}</li>
+          ))}
+        </ul>
 
         <button type="submit">Cadastrar</button>
 

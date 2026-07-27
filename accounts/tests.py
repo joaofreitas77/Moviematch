@@ -9,6 +9,7 @@ from rest_framework.test import APITestCase
 from .models import UserProfile
 
 
+@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
 class RegisterTests(APITestCase):
     def test_rejects_duplicate_username_ignoring_case(self):
         User.objects.create_user("ExistingUser", email="first@example.com", password="123456")
@@ -30,7 +31,7 @@ class RegisterTests(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("email", response.data)
 
-    def test_requires_at_least_six_password_characters(self):
+    def test_requires_at_least_eight_password_characters(self):
         response = self.client.post(
             "/api/v1/accounts/register/",
             {"username": "new-user", "email": "new@example.com", "password": "12345"},
@@ -38,6 +39,52 @@ class RegisterTests(APITestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertIn("password", response.data)
+
+    def test_rejects_common_or_single_type_passwords(self):
+        for password in ("password", "12345678", "abcdefgh"):
+            response = self.client.post(
+                "/api/v1/accounts/register/",
+                {"username": f"user-{password}", "email": f"{password}@example.com", "password": password},
+                format="json",
+            )
+            self.assertEqual(response.status_code, 400, password)
+            self.assertIn("password", response.data)
+
+    def test_accepts_complex_password(self):
+        with patch("accounts.verification.secrets.randbelow", return_value=123456):
+            response = self.client.post(
+                "/api/v1/accounts/register/",
+                {"username": "secure-user", "email": "secure@example.com", "password": "Cinema#2026"},
+                format="json",
+            )
+        self.assertEqual(response.status_code, 201)
+        user = User.objects.get(username="secure-user")
+        self.assertFalse(user.is_active)
+        self.assertIn("123456", mail.outbox[-1].body)
+
+        response = self.client.post(
+            "/api/v1/accounts/verify-email/",
+            {"email": "secure@example.com", "code": "123456"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        user.refresh_from_db()
+        self.assertTrue(user.is_active)
+
+    def test_rejects_wrong_verification_code(self):
+        with patch("accounts.verification.secrets.randbelow", return_value=123456):
+            self.client.post(
+                "/api/v1/accounts/register/",
+                {"username": "pending-user", "email": "pending@example.com", "password": "Cinema#2026"},
+                format="json",
+            )
+        response = self.client.post(
+            "/api/v1/accounts/verify-email/",
+            {"email": "pending@example.com", "code": "654321"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(User.objects.get(username="pending-user").is_active)
 
 
 class ProfileTests(APITestCase):
@@ -77,12 +124,12 @@ class ProfileTests(APITestCase):
     def test_user_can_change_password(self):
         response = self.client.patch(
             "/api/v1/accounts/profile/",
-            {"current_password": "123456", "new_password": "abcdef"},
+            {"current_password": "123456", "new_password": "Cinema#2026"},
             format="json",
         )
         self.assertEqual(response.status_code, 200)
         self.user.refresh_from_db()
-        self.assertTrue(self.user.check_password("abcdef"))
+        self.assertTrue(self.user.check_password("Cinema#2026"))
 
     def test_rejects_avatar_larger_than_server_limit(self):
         oversized_avatar = "data:image/jpeg;base64," + base64.b64encode(b"x" * (500 * 1024 + 1)).decode()

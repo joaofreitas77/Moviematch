@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { login, loginAdmin } from "../services/api";
 
 function Login({ admin = false }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -29,6 +30,7 @@ function Login({ admin = false }) {
         {admin && <p className="auth-intro">Área exclusiva para administradores do CineLog.</p>}
 
         {erro && <p className="auth-error">{erro}</p>}
+        {!admin && searchParams.get("verified") === "1" && <p className="verification-feedback success">E-mail confirmado. Agora você já pode entrar.</p>}
 
         <input
           type="text"

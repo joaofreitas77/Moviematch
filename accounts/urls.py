@@ -6,11 +6,15 @@ from .views import (
     CurrentUserView,
     ProfileUpdateView,
     RegisterView,
+    ResendVerificationView,
     SupportRequestView,
+    VerifyEmailView,
 )
 
 urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
+    path("verify-email/", VerifyEmailView.as_view(), name="verify-email"),
+    path("resend-verification/", ResendVerificationView.as_view(), name="resend-verification"),
     path("me/", CurrentUserView.as_view(), name="current-user"),
     path("profile/", ProfileUpdateView.as_view(), name="profile-update"),
     path("support/", SupportRequestView.as_view(), name="support-request"),

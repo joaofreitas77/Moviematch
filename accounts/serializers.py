@@ -3,16 +3,21 @@ import binascii
 import re
 
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
 from .models import UserProfile
 
 class RegisterSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(required=True)
+    email = serializers.EmailField(
+        required=True,
+        error_messages={"invalid": "Informe um endereço de e-mail válido."},
+    )
     password = serializers.CharField(
         write_only=True,
-        min_length=6,
-        error_messages={"min_length": "A senha deve ter pelo menos 6 caracteres."},
+        min_length=8,
+        error_messages={"min_length": "A senha deve ter pelo menos 8 caracteres."},
     )
 
     class Meta:
@@ -31,13 +36,31 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Este e-mail já está cadastrado.")
         return email
 
+    def validate_password(self, password):
+        candidate = User(username=self.initial_data.get("username", ""), email=self.initial_data.get("email", ""))
+        try:
+            validate_password(password, user=candidate)
+        except DjangoValidationError as error:
+            raise serializers.ValidationError(list(error.messages))
+        return password
+
     def create(self, validated_data):
         user = User.objects.create_user(
             username=validated_data["username"],
             email=validated_data.get("email", ""),
-            password=validated_data["password"]
+            password=validated_data["password"],
+            is_active=False,
         )
         return user
+
+
+class VerifyEmailSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.RegexField(r"^\d{6}$", error_messages={"invalid": "Informe o código de 6 dígitos."})
+
+
+class ResendVerificationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
 
 
 class CurrentUserSerializer(serializers.ModelSerializer):
@@ -62,7 +85,7 @@ class CurrentUserSerializer(serializers.ModelSerializer):
 class ProfileUpdateSerializer(serializers.Serializer):
     email = serializers.EmailField(required=False)
     current_password = serializers.CharField(required=False, write_only=True)
-    new_password = serializers.CharField(required=False, write_only=True, min_length=6)
+    new_password = serializers.CharField(required=False, write_only=True, min_length=8)
     avatar = serializers.CharField(required=False, allow_blank=True)
     theme = serializers.ChoiceField(required=False, choices=UserProfile.THEME_CHOICES)
 
@@ -86,6 +109,13 @@ class ProfileUpdateSerializer(serializers.Serializer):
         if len(image_bytes) > 500 * 1024:
             raise serializers.ValidationError("A foto processada deve ter no máximo 500 KB.")
         return avatar
+
+    def validate_new_password(self, password):
+        try:
+            validate_password(password, user=self.context["request"].user)
+        except DjangoValidationError as error:
+            raise serializers.ValidationError(list(error.messages))
+        return password
 
     def validate(self, attrs):
         user = self.context["request"].user

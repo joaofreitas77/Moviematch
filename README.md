@@ -8,7 +8,7 @@ O **MovieMatch** é uma plataforma full stack para descobrir, organizar e avalia
 
 ## Funcionalidades
 
-- Cadastro e login com autenticação JWT e renovação automática da sessão;
+- Cadastro com senha forte, confirmação do e-mail por código e login com autenticação JWT;
 - Catálogo responsivo com busca, filtros por gênero e rankings por nota;
 - Página de detalhes com sinopse, elenco, direção, avaliações e trailer;
 - Favoritos individuais por usuário;
