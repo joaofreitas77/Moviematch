@@ -21,8 +21,8 @@ function Register() {
     }
 
     try {
-      const result = await register(username, email, password);
-      navigate("/verify-email", { replace: true, state: { email: result.email } });
+      await register(username, email, password);
+      navigate("/login", { replace: true });
     } catch (error) {
       setErro(error.message);
     }

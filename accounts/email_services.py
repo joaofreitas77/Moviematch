@@ -2,19 +2,6 @@ import requests
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 
-
-def send_verification_email(to, subject, text_body, html_body):
-    """Send account codes through the configured Django SMTP backend."""
-    email = EmailMultiAlternatives(
-        subject=subject,
-        body=text_body,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[to],
-    )
-    email.attach_alternative(html_body, "text/html")
-    email.send(fail_silently=False)
-
-
 def send_support_email(subject, text_body, html_body, reply_to):
     """Keep support on Resend, falling back to SMTP when no API key exists."""
     if settings.RESEND_API_KEY:

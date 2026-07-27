@@ -1,9 +1,5 @@
 from django.contrib.auth.models import User
-from django.contrib.auth.hashers import check_password
 from django.db.models import Count
-from django.db import transaction
-from django.conf import settings
-import logging
 from django.utils import timezone
 from django.utils.html import escape
 from rest_framework import generics, status
@@ -18,97 +14,17 @@ from movies.models import Movie
 from reviews.models import Review
 from core.throttles import SupportRateThrottle
 from .email_services import send_support_email
-from .models import EmailVerification
-from .verification import issue_verification_code
 from .serializers import (
     AdminUserSerializer,
     CurrentUserSerializer,
     ProfileUpdateSerializer,
     RegisterSerializer,
-    ResendVerificationSerializer,
     SupportRequestSerializer,
-    VerifyEmailSerializer,
 )
-
-logger = logging.getLogger(__name__)
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
-
-    @transaction.atomic
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        try:
-            issue_verification_code(user)
-        except Exception:
-            logger.exception("Falha ao enviar código de confirmação para o novo cadastro")
-            user.delete()
-            return Response(
-                {"error": "Não foi possível enviar o código de confirmação. Verifique o e-mail e tente novamente."},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
-            )
-        return Response(
-            {"email": user.email, "requires_verification": True, "message": "Código de confirmação enviado."},
-            status=status.HTTP_201_CREATED,
-        )
-
-
-class VerifyEmailView(APIView):
-    permission_classes = [AllowAny]
-
-    @transaction.atomic
-    def post(self, request):
-        serializer = VerifyEmailSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data["email"].strip().lower()
-        code = serializer.validated_data["code"]
-        user = User.objects.filter(email__iexact=email, is_staff=False).first()
-        if not user or user.is_active:
-            if user and user.is_active:
-                return Response({"message": "Este e-mail já foi confirmado."})
-            return Response({"email": "Não existe um cadastro pendente para este e-mail."}, status=400)
-        verification = EmailVerification.objects.select_for_update().filter(user=user).first()
-        if not verification:
-            return Response({"code": "Solicite um novo código de confirmação."}, status=400)
-        if verification.expires_at <= timezone.now():
-            return Response({"code": "Este código expirou. Solicite um novo."}, status=400)
-        if verification.attempts >= 5:
-            return Response({"code": "Limite de tentativas atingido. Solicite um novo código."}, status=400)
-        if not check_password(code, verification.code_hash):
-            verification.attempts += 1
-            verification.save(update_fields=["attempts"])
-            return Response({"code": "Código incorreto."}, status=400)
-        user.is_active = True
-        user.save(update_fields=["is_active"])
-        verification.delete()
-        return Response({"message": "E-mail confirmado. Sua conta está ativa."})
-
-
-class ResendVerificationView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        serializer = ResendVerificationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data["email"].strip().lower()
-        user = User.objects.filter(email__iexact=email, is_active=False, is_staff=False).first()
-        if not user:
-            return Response({"email": "Não existe um cadastro pendente para este e-mail."}, status=400)
-        verification = EmailVerification.objects.filter(user=user).first()
-        if verification:
-            elapsed = (timezone.now() - verification.sent_at).total_seconds()
-            if elapsed < settings.EMAIL_VERIFICATION_RESEND_SECONDS:
-                remaining = int(settings.EMAIL_VERIFICATION_RESEND_SECONDS - elapsed) + 1
-                return Response({"error": f"Aguarde {remaining} segundos para reenviar."}, status=429)
-        try:
-            issue_verification_code(user)
-        except Exception:
-            logger.exception("Falha ao reenviar código de confirmação")
-            return Response({"error": "Não foi possível enviar um novo código agora."}, status=503)
-        return Response({"message": "Novo código enviado."})
 
 
 class CurrentUserView(generics.RetrieveAPIView):

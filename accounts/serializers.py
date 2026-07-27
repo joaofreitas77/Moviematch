@@ -49,20 +49,8 @@ class RegisterSerializer(serializers.ModelSerializer):
             username=validated_data["username"],
             email=validated_data.get("email", ""),
             password=validated_data["password"],
-            is_active=False,
         )
         return user
-
-
-class VerifyEmailSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    code = serializers.RegexField(r"^\d{6}$", error_messages={"invalid": "Informe o código de 6 dígitos."})
-
-
-class ResendVerificationSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-
-
 class CurrentUserSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
     theme = serializers.SerializerMethodField()

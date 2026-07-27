@@ -251,14 +251,6 @@ img { max-width: 100%; }
 .password-requirements li.valid { color: #8ed9ac; }
 .password-requirements li.valid::before { content: "✓"; }
 .profile-password-requirements { margin-top: 12px; }
-.auth-field { display: grid; gap: 7px; color: #aaaab1; font-size: 12px; font-weight: 700; }
-.auth-field input { margin-bottom: 12px; }
-.verification-code-input { text-align: center; font: 800 25px "Manrope"; letter-spacing: 9px; }
-.auth-card .verification-resend { margin-top: 9px; color: #d6d6da; background: transparent; border: 1px solid var(--line); }
-.auth-card button:disabled { opacity: .55; cursor: not-allowed; }
-.verification-feedback { margin: -8px 0 17px !important; padding: 11px 12px; border-radius: 7px; font-size: 12px !important; line-height: 1.45; }
-.verification-feedback.error { color: #ff9298; background: rgba(229,9,20,.09); border: 1px solid rgba(229,9,20,.25); }
-.verification-feedback.success { color: #9de1b8; background: rgba(48,164,95,.1); border: 1px solid rgba(48,164,95,.25); }
 .footer-about-link { color: #aaaab1; font-weight: 700; text-decoration: none; }
 .footer-about-link:hover { color: #fff; }
 .about-page { min-height: 100vh; padding: 135px clamp(20px,6vw,90px) 80px; background: radial-gradient(circle at 85% 5%,rgba(229,9,20,.17),transparent 28%),var(--black); }

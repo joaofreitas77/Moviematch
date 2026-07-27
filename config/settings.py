@@ -197,13 +197,10 @@ EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=15, cast=int)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='CineLog <no-reply@cinelog.local>')
 SUPPORT_EMAIL = config('SUPPORT_EMAIL', default='jpgf.profissional@gmail.com')
 RESEND_API_KEY = config('RESEND_API_KEY', default='')
 RESEND_FROM_EMAIL = config('RESEND_FROM_EMAIL', default='CineLog <onboarding@resend.dev>')
-EMAIL_VERIFICATION_CODE_MINUTES = config('EMAIL_VERIFICATION_CODE_MINUTES', default=15, cast=int)
-EMAIL_VERIFICATION_RESEND_SECONDS = config('EMAIL_VERIFICATION_RESEND_SECONDS', default=60, cast=int)
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 if not DEBUG:

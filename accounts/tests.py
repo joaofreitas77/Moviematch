@@ -9,7 +9,6 @@ from rest_framework.test import APITestCase
 from .models import UserProfile
 
 
-@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
 class RegisterTests(APITestCase):
     def test_rejects_duplicate_username_ignoring_case(self):
         User.objects.create_user("ExistingUser", email="first@example.com", password="123456")
@@ -51,40 +50,14 @@ class RegisterTests(APITestCase):
             self.assertIn("password", response.data)
 
     def test_accepts_complex_password(self):
-        with patch("accounts.verification.secrets.randbelow", return_value=123456):
-            response = self.client.post(
-                "/api/v1/accounts/register/",
-                {"username": "secure-user", "email": "secure@example.com", "password": "Cinema#2026"},
-                format="json",
-            )
+        response = self.client.post(
+            "/api/v1/accounts/register/",
+            {"username": "secure-user", "email": "secure@example.com", "password": "Cinema#2026"},
+            format="json",
+        )
         self.assertEqual(response.status_code, 201)
         user = User.objects.get(username="secure-user")
-        self.assertFalse(user.is_active)
-        self.assertIn("123456", mail.outbox[-1].body)
-
-        response = self.client.post(
-            "/api/v1/accounts/verify-email/",
-            {"email": "secure@example.com", "code": "123456"},
-            format="json",
-        )
-        self.assertEqual(response.status_code, 200)
-        user.refresh_from_db()
         self.assertTrue(user.is_active)
-
-    def test_rejects_wrong_verification_code(self):
-        with patch("accounts.verification.secrets.randbelow", return_value=123456):
-            self.client.post(
-                "/api/v1/accounts/register/",
-                {"username": "pending-user", "email": "pending@example.com", "password": "Cinema#2026"},
-                format="json",
-            )
-        response = self.client.post(
-            "/api/v1/accounts/verify-email/",
-            {"email": "pending@example.com", "code": "654321"},
-            format="json",
-        )
-        self.assertEqual(response.status_code, 400)
-        self.assertFalse(User.objects.get(username="pending-user").is_active)
 
 
 class ProfileTests(APITestCase):

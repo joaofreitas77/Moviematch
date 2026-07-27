@@ -57,26 +57,13 @@ async function authenticate(endpoint, username, password) {
 }
 
 export async function register(username, email, password) {
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 25000);
-  let response;
-  try {
-    response = await trackedFetch(`${API_URL}/accounts/register/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username, email, password }),
-      signal: controller.signal,
-    });
-  } catch (error) {
-    if (error.name === "AbortError") {
-      throw new Error("O servidor demorou para enviar o código. Tente novamente em instantes.", { cause: error });
-    }
-    throw error;
-  } finally {
-    window.clearTimeout(timeout);
-  }
+  const response = await trackedFetch(`${API_URL}/accounts/register/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ username, email, password }),
+  });
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
@@ -84,28 +71,6 @@ export async function register(username, email, password) {
   }
 
   return await response.json();
-}
-
-export async function verifyEmail(email, code) {
-  const response = await trackedFetch(`${API_URL}/accounts/verify-email/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, code }),
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || getValidationMessage(data) || "Não foi possível confirmar o e-mail.");
-  return data;
-}
-
-export async function resendVerification(email) {
-  const response = await trackedFetch(`${API_URL}/accounts/resend-verification/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email }),
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || getValidationMessage(data) || "Não foi possível reenviar o código.");
-  return data;
 }
 
 export function getToken() {
