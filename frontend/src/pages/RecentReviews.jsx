@@ -6,6 +6,7 @@ import {
   removeReview,
   updateReview,
 } from "../services/api";
+import UserAvatar from "../components/UserAvatar";
 
 function RecentReviews() {
   const [reviews, setReviews] = useState([]);
@@ -104,7 +105,10 @@ function RecentReviews() {
                   <div className="review-card-top">
                     <div>
                       <h3>{review.movie_title}</h3>
-                      <p className="review-user">Avaliado por: {review.username || "Usuário"}</p>
+                      <div className="review-author-line">
+                        <UserAvatar user={{ username: review.username, avatar: review.user_avatar }} className="review-author-avatar" />
+                        <p className="review-user">Avaliado por: {review.username || "Usuário"}</p>
+                      </div>
                       {review.movie_is_private && !review.can_access_movie && <p className="private-review-note">Privado · adicione em “Meus filmes” para acessar</p>}
                     </div>
                     {(isAuthor || canRemove) && <div className="review-actions">

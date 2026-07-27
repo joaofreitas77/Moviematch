@@ -17,6 +17,7 @@ from .email_services import send_support_email
 from .serializers import (
     AdminUserSerializer,
     CurrentUserSerializer,
+    ProfileUpdateSerializer,
     RegisterSerializer,
     SupportRequestSerializer,
 )
@@ -32,6 +33,21 @@ class CurrentUserView(generics.RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class ProfileUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request):
+        serializer = ProfileUpdateSerializer(
+            instance=request.user,
+            data=request.data,
+            partial=True,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response(CurrentUserSerializer(user).data)
 
 
 class SupportRequestView(APIView):
@@ -143,7 +159,7 @@ class AdminUserListView(generics.ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        return User.objects.annotate(
+        return User.objects.select_related("profile").annotate(
             movies_count=Count("movies", distinct=True),
             reviews_count=Count("reviews", distinct=True),
             favorites_count=Count("favorites", distinct=True),

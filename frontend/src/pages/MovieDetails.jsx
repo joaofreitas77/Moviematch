@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { getMovieById, addReview, getMovieReviews } from "../services/api";
+import UserAvatar from "../components/UserAvatar";
 
 function getYouTubeEmbedUrl(url) {
   if (!url) return null;
@@ -216,9 +217,7 @@ function MovieDetails() {
             {reviews.map((review) => (
               <article className="movie-review-item" key={review.id}>
                 <div className="movie-review-user">
-                  <span className="review-avatar" aria-hidden="true">
-                    {(review.username || "U").slice(0, 1).toUpperCase()}
-                  </span>
+                  <UserAvatar user={{ username: review.username, avatar: review.user_avatar }} className="review-avatar" />
                   <div>
                     <strong>{review.username || "Usuário"}</strong>
                     <small>{new Date(review.created_at).toLocaleDateString("pt-BR")}</small>

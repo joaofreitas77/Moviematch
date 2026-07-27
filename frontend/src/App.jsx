@@ -15,6 +15,7 @@ import RecentReviews from "./pages/RecentReviews";
 import MyMovies from "./pages/MyMovies";
 import AdminDashboard from "./pages/AdminDashboard";
 import Support from "./pages/Support";
+import Profile from "./pages/Profile";
 
 import { getSessionVersion, getToken } from "./services/api";
 
@@ -161,6 +162,10 @@ function App() {
       <Route
         path="/support"
         element={<ProtectedLayout><Support /></ProtectedLayout>}
+      />
+      <Route
+        path="/profile"
+        element={<ProtectedLayout><Profile /></ProtectedLayout>}
       />
       </Routes>
     </>

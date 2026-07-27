@@ -1,8 +1,12 @@
+import base64
+
 from django.contrib.auth.models import User
 from django.core import mail
 from django.test import override_settings
 from unittest.mock import patch
 from rest_framework.test import APITestCase
+
+from .models import UserProfile
 
 
 class RegisterTests(APITestCase):
@@ -36,6 +40,61 @@ class RegisterTests(APITestCase):
         self.assertIn("password", response.data)
 
 
+class ProfileTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user("member", email="member@example.com", password="123456")
+        self.other = User.objects.create_user("other", email="other@example.com", password="123456")
+        self.client.force_authenticate(self.user)
+
+    def test_user_can_update_theme_and_avatar(self):
+        avatar = "data:image/png;base64,iVBORw0KGgo="
+        response = self.client.patch(
+            "/api/v1/accounts/profile/",
+            {"theme": "light", "avatar": avatar},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["theme"], "light")
+        self.assertEqual(response.data["avatar"], avatar)
+
+    def test_email_change_requires_current_password_and_unique_email(self):
+        response = self.client.patch(
+            "/api/v1/accounts/profile/",
+            {"email": "new@example.com"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("current_password", response.data)
+
+        response = self.client.patch(
+            "/api/v1/accounts/profile/",
+            {"email": "OTHER@example.com", "current_password": "123456"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("email", response.data)
+
+    def test_user_can_change_password(self):
+        response = self.client.patch(
+            "/api/v1/accounts/profile/",
+            {"current_password": "123456", "new_password": "abcdef"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("abcdef"))
+
+    def test_rejects_avatar_larger_than_server_limit(self):
+        oversized_avatar = "data:image/jpeg;base64," + base64.b64encode(b"x" * (500 * 1024 + 1)).decode()
+        response = self.client.patch(
+            "/api/v1/accounts/profile/",
+            {"avatar": oversized_avatar},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("avatar", response.data)
+
+
 class AdminAccountsTests(APITestCase):
     def setUp(self):
         self.admin = User.objects.create_user("admin", password="test", is_staff=True)
@@ -45,6 +104,14 @@ class AdminAccountsTests(APITestCase):
         self.client.force_authenticate(self.user)
         response = self.client.get("/api/v1/accounts/admin/users/")
         self.assertEqual(response.status_code, 403)
+
+    def test_admin_user_list_includes_profile_avatar(self):
+        avatar = "data:image/png;base64,iVBORw0KGgo="
+        UserProfile.objects.create(user=self.admin, avatar_data=avatar)
+        self.client.force_authenticate(self.admin)
+        response = self.client.get("/api/v1/accounts/admin/users/")
+        admin_data = next(user for user in response.data if user["id"] == self.admin.id)
+        self.assertEqual(admin_data["avatar"], avatar)
 
     def test_admin_cannot_use_regular_login(self):
         response = self.client.post(

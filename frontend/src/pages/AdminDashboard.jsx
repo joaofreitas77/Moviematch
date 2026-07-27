@@ -59,7 +59,7 @@ function AdminDashboard() {
         <div className="table-scroll"><table className="users-table">
           <thead><tr><th>Usuário</th><th>Status</th><th>Cadastro</th><th>Último acesso</th><th>Atividade</th><th>Ação</th></tr></thead>
           <tbody>{filteredUsers.map((user) => <tr key={user.id}>
-            <td><div className="user-cell"><span className="user-avatar">{user.username.charAt(0).toUpperCase()}</span><div><strong>{user.username}</strong><small>{user.email || "Sem e-mail"}{user.is_staff ? " · Administrador" : ""}</small></div></div></td>
+            <td><div className="user-cell"><span className="user-avatar">{user.avatar ? <img src={user.avatar} alt="" /> : user.username.charAt(0).toUpperCase()}</span><div><strong>{user.username}</strong><small>{user.email || "Sem e-mail"}{user.is_staff ? " · Administrador" : ""}</small></div></div></td>
             <td><span className={`status-pill ${user.is_active ? "active" : "inactive"}`}>{user.is_active ? "Ativo" : "Inativo"}</span></td>
             <td>{formatDate(user.date_joined)}</td><td>{formatDate(user.last_login)}</td>
             <td><span className="activity-data">{user.movies_count} filmes · {user.reviews_count} avaliações · {user.favorites_count} favoritos</span></td>

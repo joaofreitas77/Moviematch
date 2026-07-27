@@ -5,6 +5,7 @@ from .models import Review
 
 class ReviewSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="user.username", read_only=True)
+    user_avatar = serializers.SerializerMethodField()
     movie_title = serializers.CharField(source="movie.tittle", read_only=True)
     movie_poster = serializers.URLField(source="movie.poster", read_only=True)
     movie_year = serializers.IntegerField(source="movie.realese_year", read_only=True)
@@ -19,6 +20,7 @@ class ReviewSerializer(serializers.ModelSerializer):
             "id",
             "user",
             "username",
+            "user_avatar",
             "movie",
             "movie_title",
             "movie_poster",
@@ -40,6 +42,10 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def get_movie_is_private(self, review) -> bool:
         return review.movie.owner_id is not None
+
+    def get_user_avatar(self, review):
+        profile = getattr(review.user, "profile", None)
+        return profile.avatar_data or None if profile else None
 
     def get_can_access_movie(self, review) -> bool:
         return self._get_accessible_movie_id(review) is not None

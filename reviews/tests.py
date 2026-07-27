@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework.test import APITestCase
 
 from movies.models import Movie
+from accounts.models import UserProfile
 from .models import Review
 
 
@@ -35,6 +36,14 @@ class ReviewPermissionTests(APITestCase):
 
         self.client.force_authenticate(self.admin)
         self.assertEqual(self.client.delete(f"/api/v1/reviews/{self.review.id}/").status_code, 204)
+
+    def test_review_includes_author_avatar(self):
+        avatar = "data:image/png;base64,iVBORw0KGgo="
+        UserProfile.objects.create(user=self.author, avatar_data=avatar)
+        self.client.force_authenticate(self.other)
+        response = self.client.get("/api/v1/reviews/")
+        review_data = next(item for item in response.data["results"] if item["id"] == self.review.id)
+        self.assertEqual(review_data["user_avatar"], avatar)
 
     def test_private_movie_review_is_public_but_movie_stays_private(self):
         private_movie = Movie.objects.create(

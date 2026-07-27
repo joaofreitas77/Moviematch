@@ -1,5 +1,11 @@
+import base64
+import binascii
+import re
+
 from django.contrib.auth.models import User
 from rest_framework import serializers
+
+from .models import UserProfile
 
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
@@ -35,23 +41,96 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class CurrentUserSerializer(serializers.ModelSerializer):
+    avatar = serializers.SerializerMethodField()
+    theme = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ["id", "username", "email", "is_staff", "is_active"]
+        fields = ["id", "username", "email", "is_staff", "is_active", "avatar", "theme"]
+
+    def _profile(self, user):
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        return profile
+
+    def get_avatar(self, user):
+        return self._profile(user).avatar_data or None
+
+    def get_theme(self, user):
+        return self._profile(user).theme
+
+
+class ProfileUpdateSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=False)
+    current_password = serializers.CharField(required=False, write_only=True)
+    new_password = serializers.CharField(required=False, write_only=True, min_length=6)
+    avatar = serializers.CharField(required=False, allow_blank=True)
+    theme = serializers.ChoiceField(required=False, choices=UserProfile.THEME_CHOICES)
+
+    def validate_email(self, email):
+        user = self.context["request"].user
+        email = email.strip().lower()
+        if User.objects.exclude(pk=user.pk).filter(email__iexact=email).exists():
+            raise serializers.ValidationError("Este e-mail já está cadastrado.")
+        return email
+
+    def validate_avatar(self, avatar):
+        if not avatar:
+            return ""
+        match = re.fullmatch(r"data:(image/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)", avatar)
+        if not match:
+            raise serializers.ValidationError("Use uma imagem JPG, PNG ou WebP.")
+        try:
+            image_bytes = base64.b64decode(match.group(2), validate=True)
+        except (ValueError, binascii.Error):
+            raise serializers.ValidationError("A imagem enviada é inválida.")
+        if len(image_bytes) > 500 * 1024:
+            raise serializers.ValidationError("A foto processada deve ter no máximo 500 KB.")
+        return avatar
+
+    def validate(self, attrs):
+        user = self.context["request"].user
+        sensitive_change = "email" in attrs or "new_password" in attrs
+        if sensitive_change and not attrs.get("current_password"):
+            raise serializers.ValidationError({"current_password": "Informe sua senha atual."})
+        if sensitive_change and not user.check_password(attrs["current_password"]):
+            raise serializers.ValidationError({"current_password": "A senha atual está incorreta."})
+        return attrs
+
+    def update(self, user, validated_data):
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        if "email" in validated_data:
+            user.email = validated_data["email"]
+        if validated_data.get("new_password"):
+            user.set_password(validated_data["new_password"])
+        if "email" in validated_data or validated_data.get("new_password"):
+            user.save()
+        if "avatar" in validated_data:
+            profile.avatar_data = validated_data["avatar"]
+        if "theme" in validated_data:
+            profile.theme = validated_data["theme"]
+        profile.save()
+        return user
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
     movies_count = serializers.IntegerField(read_only=True)
     reviews_count = serializers.IntegerField(read_only=True)
     favorites_count = serializers.IntegerField(read_only=True)
+    avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             "id", "username", "email", "is_active", "is_staff",
             "date_joined", "last_login", "movies_count", "reviews_count",
-            "favorites_count",
+            "favorites_count", "avatar",
         ]
+
+    def get_avatar(self, user):
+        try:
+            return user.profile.avatar_data or None
+        except UserProfile.DoesNotExist:
+            return None
 
 
 class SupportRequestSerializer(serializers.Serializer):

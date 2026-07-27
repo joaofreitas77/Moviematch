@@ -131,6 +131,31 @@ export async function getCurrentUser() {
   return response.json();
 }
 
+export function applyTheme(theme) {
+  const selectedTheme = theme === "light" ? "light" : "dark";
+  document.documentElement.dataset.theme = selectedTheme;
+  localStorage.setItem("cinelog_theme", selectedTheme);
+}
+
+export function getStoredTheme() {
+  return localStorage.getItem("cinelog_theme") || "dark";
+}
+
+export async function updateProfile(changes) {
+  const response = await authenticatedFetch(`${API_URL}/accounts/profile/`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(changes),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(getValidationMessage(data) || data.detail || "Não foi possível atualizar o perfil.");
+  }
+  if (data.theme) applyTheme(data.theme);
+  window.dispatchEvent(new CustomEvent("cinelog:profile-updated", { detail: data }));
+  return data;
+}
+
 export async function getMovies() {
   const movies = [];
   let nextPage = `${API_URL}/movies/`;

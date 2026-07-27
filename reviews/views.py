@@ -22,7 +22,7 @@ class ReviewViewSet(SoftDeleteModelViewSet):
     def get_queryset(self):
         queryset = Review.objects.filter(
             is_deleted=False
-        ).select_related("movie", "user").order_by("-created_at")
+        ).select_related("movie", "user", "user__profile").order_by("-created_at")
 
         movie_id = self.request.query_params.get("movie")
         if movie_id:
